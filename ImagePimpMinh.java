@@ -191,7 +191,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       {
         // Call contrast enhancement method
         ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
-        ImageFrame newImageFrame = new ImageFrame(FCM(imageFrame.getImage()));
+        ImageFrame newImageFrame = new ImageFrame(fCM(imageFrame.getImage()));
         desktopPane.add(newImageFrame);
         newImageFrame.toFront();
         try{newImageFrame.setSelected(true);}catch(Exception e){}
@@ -490,6 +490,16 @@ private boolean checkArray(int[][] arr1,int[][] arr2){//helper method to check e
   }
   return true;
 }
+private boolean checkArray(double[][] arr1,double[][] arr2){//helper method to check equality
+  for(int i=0;i<arr1.length;i++){
+  for(int j=0;j<arr1[i].length;j++){
+    if(arr1[i][j]!=arr2[i][j]){
+      return false; 
+    }
+  }
+  }
+  return true;
+}
  //************************************************************************
 private void writeToFile(double membership[][][],String file){
       
@@ -513,7 +523,7 @@ private void writeToFile(double membership[][][],String file){
 }
 
 //************************************************************************
-protected Image FCM(Image imageIn){
+protected Image fCM(Image imageIn){
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
@@ -675,6 +685,29 @@ private boolean compareArray(double[][][]arr1,double[][][]arr2,double term){
 }
   
 //**************************************************************************
+private double[][][] getPossibility(double[][][] memb){
+  double[][][] poss=memb;
+  int clus_index=-1;
+  for(int i=0;i<memb.length;i++){
+    for(int j=0;j<memb[i].length;j++){
+      double max=0;
+      for(int k=0;k<memb[i][j].length;k++){//get max value in cluster set or sup
+        if(memb[i][j][k]>max){
+          max=memb[i][j][k];
+          clus_index=k;
+        }
+      }
+      for(int k=0;k<memb[i][j].length;k++){//update max value in cluster set
+        poss[i][j][k]=memb[i][j][k]/memb[i][j][clus_index];
+      }
+    }
+  }
+
+  return poss;
+  
+  
+  
+}
 //**************************************************************************  
 protected Image gpca_1(Image imageIn){
   Dimension imageInDimension = getImageDimension(imageIn);
@@ -689,7 +722,8 @@ protected Image gpca_1(Image imageIn){
   double kCenters[][]=new double[cluster][3];
   double term=0;
   double membership[][][] = new double[width][height][cluster];
-  double temp_membership[][][]= new double[width][height][cluster];
+  double poss[][][]=new double[width][height][cluster];
+  double temp_kCenters[][]=new double[cluster][3];
   
   //calculate initial membership of pixel to each cluster
   for (int row = 0; row < imageInDimension.getHeight(); row++){
@@ -707,7 +741,13 @@ protected Image gpca_1(Image imageIn){
     }
   }
   try{
-    writeToFile(membership,"test");
+    writeToFile(membership,"random_generate");
+  }catch(Exception e){
+    System.out.println(e); 
+  }
+  poss=getPossibility(membership);
+  try{
+    writeToFile(poss,"initial_poss");
   }catch(Exception e){
     System.out.println(e); 
   }
@@ -721,8 +761,8 @@ protected Image gpca_1(Image imageIn){
       for (int row = 0; row < imageInDimension.getHeight(); row++){
         for (int column = 0; column < imageInDimension.getWidth(); column++)
         {
-          sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));
-          den+=Math.pow(membership[column][row][i],fuzziness);
+          sum+=TRGB[j+1][column][row]*(Math.pow(poss[column][row][i],fuzziness));//equation #25
+          den+=Math.pow(poss[column][row][i],fuzziness);
         }
       }
       System.out.println(sum/den);
@@ -755,10 +795,17 @@ protected Image gpca_1(Image imageIn){
         }
           dist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[curr][0],2)+Math.pow(TRGB[2][column][row]-kCenters[curr][1],2)+Math.pow(TRGB[3][column][row]-kCenters[curr][2],2));
           
-          double f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
+          double f=0;
+          if(dist==0){
+            f=1;
+          }else if(dist==1){
+            f=0;
+          }else{
+            f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
+          }
           
         
-          temp_membership[column][row][curr]=f;
+          membership[column][row][curr]=f;
               
 //        //update in return image
 //        for(int j=0;j<kCenters[curr].length;j++){
@@ -770,16 +817,41 @@ protected Image gpca_1(Image imageIn){
     }//row end
     }//cluster end
     
+    //update possibility
+    poss=getPossibility(membership);
+    try{
+      writeToFile(poss,"final_poss");
+    }catch(Exception e){
+      System.out.println(e); 
+    }
+    
+    //update centers
+    for(int i=0;i<kCenters.length;i++){//cluster
+      for(int j=0;j<kCenters[i].length;j++){//RGB
+        double sum=0;
+        double den=0;
+        for (int row = 0; row < imageInDimension.getHeight(); row++){
+          for (int column = 0; column < imageInDimension.getWidth(); column++)
+          {
+            sum+=TRGB[j+1][column][row]*(Math.pow(poss[column][row][i],fuzziness));//equation #25
+            den+=Math.pow(poss[column][row][i],fuzziness);
+          }
+        }
+        
+        temp_kCenters[i][j]=sum/den;
+        
+      }
+    }
     //update to see output
     for (int row = 0; row < imageInDimension.getHeight(); row++){
       for (int column = 0; column < imageInDimension.getWidth(); column++)
       {
         int select=0;
         
-        double val=temp_membership[column][row][0];
+        double val=membership[column][row][0];
         for(int curr=0;curr<kCenters.length;curr++){
-          if(temp_membership[column][row][curr]>val){
-            val=temp_membership[column][row][curr];
+          if(membership[column][row][curr]>val){
+            val=membership[column][row][curr];
             select=curr;
           }
         }
@@ -791,17 +863,17 @@ protected Image gpca_1(Image imageIn){
     }
    
     
-    if(compareArray(membership,temp_membership,term) || max==1000){
+    if(checkArray(kCenters,temp_kCenters) || max==1000){
       System.out.println("Outer Loop Ran "+max+" times");
       break;
       
     }else{
       //update membership
-      membership=temp_membership;
+      kCenters=temp_kCenters;
       try{
-        writeToFile(membership,"test1");
+        writeToFile(membership,"final_membership");
       }catch(Exception e){
-       System.out.println(e); 
+        System.out.println(e); 
       }
       
       //update center
