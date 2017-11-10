@@ -713,7 +713,7 @@ protected Image gpca_1(Image imageIn){
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  int cluster=2;//Defind cluster value
+  int cluster=3;//Defind cluster value
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
@@ -807,10 +807,6 @@ protected Image gpca_1(Image imageIn){
         
           membership[column][row][curr]=f;
               
-//        //update in return image
-//        for(int j=0;j<kCenters[curr].length;j++){
-//          update[j+1][column][row]=(int)(TRGB[j+1][column][row]*temp_membership[column][row][curr])+(50*curr);
-//        }
         
         
       }//column end      
