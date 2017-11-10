@@ -572,7 +572,7 @@ protected Image fCM(Image imageIn){
           den+=Math.pow(membership[column][row][i],fuzziness);
         }
       }
-      System.out.println(sum/den);
+      //System.out.println(sum/den);
       kCenters[i][j]=sum/den;
       
     }
@@ -655,7 +655,7 @@ protected Image fCM(Image imageIn){
             }
           }
           kCenters[i][j]=sum/den;
-          System.out.println(kCenters[i][j]);
+         // System.out.println(kCenters[i][j]);
           
         }
       }
@@ -765,7 +765,7 @@ protected Image gpca_1(Image imageIn){
           den+=Math.pow(poss[column][row][i],fuzziness);
         }
       }
-      System.out.println(sum/den);
+     // System.out.println(sum/den);
       kCenters[i][j]=sum/den;
       
     }
@@ -890,7 +890,7 @@ protected Image gpca_1(Image imageIn){
             }
           }
           kCenters[i][j]=sum/den;
-          System.out.println(kCenters[i][j]);
+         // System.out.println(kCenters[i][j]);
           
         }
       }
