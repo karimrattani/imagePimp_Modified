@@ -480,7 +480,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
 
 //**************************************************************************
  
-private boolean checkArray(int[][] arr1,int[][] arr2){//helper method to check equality
+private boolean checkArray(int[][] arr1,int[][] arr2){//helper method to check equality for kMeans
   for(int i=0;i<arr1.length;i++){
   for(int j=0;j<arr1[i].length;j++){
     if(arr1[i][j]!=arr2[i][j]){
@@ -490,10 +490,10 @@ private boolean checkArray(int[][] arr1,int[][] arr2){//helper method to check e
   }
   return true;
 }
-private boolean checkArray(double[][] arr1,double[][] arr2){//helper method to check equality
+private boolean checkArray(double[][] arr1,double[][] arr2,double term){//helper method to check equality for GPCA_1
   for(int i=0;i<arr1.length;i++){
   for(int j=0;j<arr1[i].length;j++){
-    if(arr1[i][j]!=arr2[i][j]){
+    if(Math.abs(arr1[i][j]-arr2[i][j])>term){
       return false; 
     }
   }
@@ -713,7 +713,7 @@ protected Image gpca_1(Image imageIn){
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  int cluster=3;//Defind cluster value
+  int cluster=2;//Defind cluster value
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
@@ -860,7 +860,7 @@ protected Image gpca_1(Image imageIn){
     }
    
     
-    if(checkArray(kCenters,temp_kCenters) || max==1000){
+    if(checkArray(kCenters,temp_kCenters,term) || max==1000){
       System.out.println("Outer Loop Ran "+max+" times");
       break;
       
