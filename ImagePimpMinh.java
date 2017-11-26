@@ -745,6 +745,7 @@ protected Image gpca_1(Image imageIn){
   }catch(Exception e){
     System.out.println(e); 
   }
+  //calculate possibility
   poss=getPossibility(membership);
   try{
     writeToFile(poss,"initial_poss");
