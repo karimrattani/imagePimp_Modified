@@ -21,6 +21,7 @@ import javax.swing.ImageIcon;
 import java.util.Random;
 import java.lang.*;
 import java.io.*;
+import java.util.Scanner;
 // Class Definition(s) /////////////////////////////////////////////////////
 // ImagePimp
 public class ImagePimpMinh extends JFrame //implements ActionListener
@@ -337,12 +338,12 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
    for (int row = 0; row < imageInDimension.getHeight(); row++){
      for (int column = 0; column < imageInDimension.getWidth(); column++)
      {
-       int average = TRGB[1][column][row];
-    if(average<low){
-      low=average;
+       int val = TRGB[1][column][row];
+    if(val<low){
+      low=val;
     }
-    if(average>high){
-      high=average;
+    if(val>high){
+      high=val;
     }
   }
    }
@@ -355,10 +356,10 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
    {
 
     // Average values and store back into TRGB array
-      int average = TRGB[1][column][row];
+      int val = TRGB[1][column][row];
       
      // int calc = ((average-low)((max-min)/(high-low))+min);
-      int calc=(int)(((average-low)*((max-min)/(high-low)))+min);
+      int calc=(int)(((val-low)*((max-min)/(high-low)))+min);//Formula to calculate 
       if(calc<0){
         calc=0;
       }else if(calc>255){
@@ -376,13 +377,27 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
  }
  //************************************************************************
 //************************************************************************
+ private int[][] getClustersColor(int cluster){//get Cluster Color to differentiate
+   Random rnd=new Random();
+   int[][] arr=new int[cluster][3];
+   for(int i=0;i<arr.length;i++){
+     for(int j=0;j<arr[0].length;j++){
+       arr[i][j]=rnd.nextInt(255);
+     }
+     
+   }
+   return arr;   
+ }
+ 
+ 
+ 
  protected Image kMeans(Image imageIn)//for k=2
  {
    // Declare local storage
    Dimension imageInDimension = getImageDimension(imageIn);
    int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
    int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-   int k=11;//Defind cluster value
+   int k=5;//Defind cluster value
    //get random centers for K clusters
    int width=(int)imageInDimension.getWidth();
    int height=(int)imageInDimension.getHeight();
@@ -391,6 +406,8 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
    int checkMean[][]=new int[k][3];
    int sumMean[][]=new int[k][3];
    int meanCount[]=new int[k];
+   int count[]=new int[k];
+   int[][] clusterColor=getClustersColor(k);
    
    
    // initialize values for K clusters
@@ -428,11 +445,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
          for(int i=0;i<3;i++){
            sumMean[clusterIndex][i]+=TRGB[i+1][column][row];//add mean
            //switch values between clusters and differentiate values to see visual difference
-           if(clusterIndex%2==0){
-             update[i+1][column][row]=50*i+(clusterIndex*10);
-           }else{
-             update[i+1][column][row]=10*i+(clusterIndex*10);
-           }
+           update[i+1][column][row]=clusterColor[clusterIndex][i];
          }
          
          
@@ -713,17 +726,19 @@ protected Image gpca_1(Image imageIn){
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  int cluster=2;//Defind cluster value
+  int cluster=5;//Defind cluster value
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
-  double fuzziness=10;
+  double fuzziness=50;
   int max=0;
   double kCenters[][]=new double[cluster][3];
   double term=0;
   double membership[][][] = new double[width][height][cluster];
   double poss[][][]=new double[width][height][cluster];
   double temp_kCenters[][]=new double[cluster][3];
+  int count[]=new int[cluster];
+  int[][] clusterColor=getClustersColor(cluster);
   
   //calculate initial membership of pixel to each cluster
   for (int row = 0; row < imageInDimension.getHeight(); row++){
@@ -852,15 +867,23 @@ protected Image gpca_1(Image imageIn){
             select=curr;
           }
         }
+        count[select]++;
+        
         for(int i=1;i<4;i++){//RGB
-          update[i][column][row]=TRGB[i][column][row]*select;
+            update[i][column][row]=clusterColor[select][i-1];
         }
+        
         
       }
     }
    
+   
     
     if(checkArray(kCenters,temp_kCenters,term) || max==1000){
+       //output count
+      for(int i=0;i<count.length;i++){
+        System.out.println(i+": "+count[i]);
+      }
       System.out.println("Outer Loop Ran "+max+" times");
       break;
       
