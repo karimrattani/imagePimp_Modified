@@ -394,10 +394,13 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
  protected Image kMeans(Image imageIn)//for k=2
  {
    // Declare local storage
+   Scanner scan=new Scanner(System.in);//user input
    Dimension imageInDimension = getImageDimension(imageIn);
    int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
    int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-   int k=5;//Defind cluster value
+   System.out.print("Input Cluster: ");
+   int inp=scan.nextInt();
+   int k=inp;//Defind cluster value
    //get random centers for K clusters
    int width=(int)imageInDimension.getWidth();
    int height=(int)imageInDimension.getHeight();
@@ -536,20 +539,28 @@ private void writeToFile(double membership[][][],String file){
 }
 
 //************************************************************************
+
+
 protected Image fCM(Image imageIn){
+  Scanner scan=new Scanner(System.in);//user input
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  int cluster=2;//Defind cluster value
+  System.out.print("Input Cluster: ");
+  int inp=scan.nextInt();
+  int cluster=inp;//Defind cluster value
+  System.out.print("Input Fuzziness: ");
+  inp=scan.nextInt();
+  int fuzziness=inp;
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
-  double fuzziness=10;
-  int max=0;
+  int max=1;
   double kCenters[][]=new double[cluster][3];
-  double term=0;
+  double term=0.000005;
   double membership[][][] = new double[width][height][cluster];
   double temp_membership[][][]= new double[width][height][cluster];
+  int[][] clusterColor=getClustersColor(cluster);
   
   //calculate initial membership of pixel to each cluster
   for (int row = 0; row < imageInDimension.getHeight(); row++){
@@ -566,11 +577,11 @@ protected Image fCM(Image imageIn){
       membership[column][row][cluster-1]=1-sum_Prob;
     }
   }
-  try{
-    writeToFile(membership,"test");
-  }catch(Exception e){
-    System.out.println(e); 
-  }
+//  try{
+//    writeToFile(membership,"test");
+//  }catch(Exception e){
+//    System.out.println(e); 
+//  }
 
   //calculate center for KClusters
   //#3
@@ -634,7 +645,7 @@ protected Image fCM(Image imageIn){
           }
         }
         for(int i=1;i<4;i++){//RGB
-          update[i][column][row]=TRGB[i][column][row]*select;
+         update[i][column][row]=clusterColor[select][i-1];
         }
         
       }
@@ -648,11 +659,12 @@ protected Image fCM(Image imageIn){
     }else{
       //update membership
       membership=temp_membership;
-      try{
-        writeToFile(membership,"test1");
-      }catch(Exception e){
-       System.out.println(e); 
-      }
+      
+//      try{
+//        writeToFile(membership,"test1");
+//      }catch(Exception e){
+//       System.out.println(e); 
+//      }
       
       //update center
       
@@ -723,15 +735,22 @@ private double[][][] getPossibility(double[][][] memb){
 }
 //**************************************************************************  
 protected Image gpca_1(Image imageIn){
+  Scanner scan=new Scanner(System.in);//for user input
+  
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  int cluster=5;//Defind cluster value
+  System.out.print("Input Cluster: ");
+  int inp=scan.nextInt();
+  int cluster=inp;//Defind cluster value
+  System.out.print("Input Fuzziness: ");
+  inp=scan.nextInt();
+  int fuzziness=inp;
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
-  double fuzziness=50;
-  int max=0;
+  
+  int max=1;
   double kCenters[][]=new double[cluster][3];
   double term=0;
   double membership[][][] = new double[width][height][cluster];
