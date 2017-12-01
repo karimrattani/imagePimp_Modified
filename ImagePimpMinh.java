@@ -78,6 +78,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
 
     JMenuItem openFileMenuItem = new JMenuItem("Open");
     JMenuItem closeFileMenuItem = new JMenuItem("Close");
+    JMenuItem saveAsFileMenuItem = new JMenuItem("Save As...");
 
     // Temporarily Disable Unimplemented Menu Item(s)
     newFileMenuItem.setEnabled(false);
@@ -92,6 +93,8 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
 
        // Open a file dialog box to choose a file
        JFileChooser fileChooser = new JFileChooser();
+       
+       fileChooser.setCurrentDirectory(new File("C:"+System.getProperty("file.separator")+"Users"+System.getProperty("file.separator")+"Karim"+System.getProperty("file.separator")+"Desktop"+System.getProperty("file.separator")+"Git-Repos"+System.getProperty("file.separator")+"imagePimp_Modified"+System.getProperty("file.separator")+"images"));
 
        // Initialize dialog box
        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -119,12 +122,35 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       }
      }
     );
-
+    saveAsFileMenuItem.addActionListener(
+                                         new ActionListener()
+                                           {
+      public void actionPerformed(ActionEvent ae)
+      {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File("C:"+System.getProperty("file.separator")+"Users"+System.getProperty("file.separator")+"Karim"+System.getProperty("file.separator")+"Desktop"+System.getProperty("file.separator")+"Git-Repos"+System.getProperty("file.separator")+"imagePimp_Modified"+System.getProperty("file.separator")+"images"));
+        // Initialize dialog box
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        
+        // Show the file dialog box
+        if (fileChooser.showSaveDialog(ImagePimpMinh.this)!=JFileChooser.CANCEL_OPTION)
+        {
+          ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
+          Dimension imageInDimension = getImageDimension(imageFrame.getImage());
+          int row=(int)imageInDimension.getHeight(), col=(int)imageInDimension.getWidth();
+          //System.out.println("Save as row: "+row+ " col: "+col);
+          int pixels[]=imageToPixelsArray(imageFrame.getImage());
+          imageFrame.saveImage(fileChooser.getSelectedFile(),pixels,col,row);
+          try{imageFrame.setSelected(true);}catch(Exception e){System.out.println(e);}
+        }
+      }
+    });
     // Add Item(s) to File Menu
     fileMenu.add(newFileMenuItem);
     fileMenu.add(openFileMenuItem);
     fileMenu.addSeparator();
     fileMenu.add(closeFileMenuItem);
+    fileMenu.add(saveAsFileMenuItem);
 
    // Add File Menu to Menu Bar
    menuBar.add(fileMenu);
@@ -394,13 +420,12 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
  protected Image kMeans(Image imageIn)//for k=2
  {
    // Declare local storage
-   Scanner scan=new Scanner(System.in);//user input
    Dimension imageInDimension = getImageDimension(imageIn);
    int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
    int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-   System.out.print("Input Cluster: ");
-   int inp=scan.nextInt();
-   int k=inp;//Defind cluster value
+   String inp = JOptionPane.showInputDialog("Enter Cluster");
+   int k=Integer.parseInt(inp);//Defind cluster value
+   
    //get random centers for K clusters
    int width=(int)imageInDimension.getWidth();
    int height=(int)imageInDimension.getHeight();
@@ -542,16 +567,15 @@ private void writeToFile(double membership[][][],String file){
 
 
 protected Image fCM(Image imageIn){
-  Scanner scan=new Scanner(System.in);//user input
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  System.out.print("Input Cluster: ");
-  int inp=scan.nextInt();
-  int cluster=inp;//Defind cluster value
-  System.out.print("Input Fuzziness: ");
-  inp=scan.nextInt();
-  int fuzziness=inp;
+  
+  String inp = JOptionPane.showInputDialog("Enter Cluster");
+  int cluster=Integer.parseInt(inp);//Defind cluster value
+  inp = JOptionPane.showInputDialog("Enter Fuzziness");
+  int fuzziness=Integer.parseInt(inp);
+  
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
@@ -735,17 +759,15 @@ private double[][][] getPossibility(double[][][] memb){
 }
 //**************************************************************************  
 protected Image gpca_1(Image imageIn){
-  Scanner scan=new Scanner(System.in);//for user input
-  
   Dimension imageInDimension = getImageDimension(imageIn);
   int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  System.out.print("Input Cluster: ");
-  int inp=scan.nextInt();
-  int cluster=inp;//Defind cluster value
-  System.out.print("Input Fuzziness: ");
-  inp=scan.nextInt();
-  int fuzziness=inp;
+  
+  String inp = JOptionPane.showInputDialog("Enter Cluster");
+  int cluster=Integer.parseInt(inp);//Defind cluster value
+  inp = JOptionPane.showInputDialog("Enter Fuzziness");
+  int fuzziness=Integer.parseInt(inp);
+  
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
@@ -1165,7 +1187,25 @@ class ImageFrame extends JInternalFrame
   return imagePanel.getImageIcon().getImage();
 
  }
-
+ public boolean saveImage(File imageFile, int[] pixels, int col, int row)
+ {
+   try{
+     BufferedImage image = new BufferedImage(col, row, BufferedImage.TYPE_3BYTE_BGR);
+     image.setRGB(0,0,col,row,pixels,0,col);
+     OutputStream os = new FileOutputStream(imageFile);
+     JPEGEncodeParam param = new JPEGEncodeParam();
+     ImageEncoder enc = ImageCodec.createImageEncoder("JPEG",os,param);
+     
+     enc.encode(image);
+     os.close();
+     
+     /*FileOutputStream os = new FileOutputStream(imageFile);
+      JAI.create("encode",imagePanel.getImageIcon().getImage(),os,JPG,null);
+      JAI.create("filestore",imagePanel.getImageIcon().getImage(),imageFile.getName(),JPG,null);
+      os.close();*/
+   }catch(Exception e){return false;}
+   return true;
+ }
 
  private class ImagePanel extends JPanel
  {
