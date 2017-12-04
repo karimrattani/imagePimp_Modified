@@ -796,18 +796,21 @@ protected Image gpca_1(Image imageIn){
       membership[column][row][cluster-1]=1-sum_Prob;
     }
   }
-  try{
-    writeToFile(membership,"random_generate");
-  }catch(Exception e){
-    System.out.println(e); 
-  }
+  
+//  try{
+//    writeToFile(membership,"random_generate");
+//  }catch(Exception e){
+//    System.out.println(e); 
+//  }
+  
   //calculate possibility
   poss=getPossibility(membership);
-  try{
-    writeToFile(poss,"initial_poss");
-  }catch(Exception e){
-    System.out.println(e); 
-  }
+  
+//  try{
+//    writeToFile(poss,"initial_poss");
+//  }catch(Exception e){
+//    System.out.println(e); 
+//  }
 
   //calculate center for KClusters
   //#3
@@ -842,6 +845,7 @@ protected Image gpca_1(Image imageIn){
         double param_f=0;
         double all_clus_dist;
         //Equation 14
+        
         //average fuzzy intracluster distance of cluster 
         
         for(int j=0;j<kCenters.length;j++){//all cluster
@@ -852,6 +856,7 @@ protected Image gpca_1(Image imageIn){
         }
           dist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[curr][0],2)+Math.pow(TRGB[2][column][row]-kCenters[curr][1],2)+Math.pow(TRGB[3][column][row]-kCenters[curr][2],2));
           
+          //calculate membership
           double f=0;
           if(dist==0){
             f=1;
@@ -861,7 +866,6 @@ protected Image gpca_1(Image imageIn){
             f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
           }
           
-        
           membership[column][row][curr]=f;
               
         
@@ -871,12 +875,14 @@ protected Image gpca_1(Image imageIn){
     }//cluster end
     
     //update possibility
+    
     poss=getPossibility(membership);
-    try{
-      writeToFile(poss,"final_poss");
-    }catch(Exception e){
-      System.out.println(e); 
-    }
+    
+//    try{
+//      writeToFile(poss,"final_poss");
+//    }catch(Exception e){
+//      System.out.println(e); 
+//    }
     
     //update centers
     for(int i=0;i<kCenters.length;i++){//cluster
@@ -895,6 +901,7 @@ protected Image gpca_1(Image imageIn){
         
       }
     }
+    
     //update to see output
     for (int row = 0; row < imageInDimension.getHeight(); row++){
       for (int column = 0; column < imageInDimension.getWidth(); column++)
@@ -917,25 +924,23 @@ protected Image gpca_1(Image imageIn){
         
       }
     }
-   
-   
-    
+
     if(checkArray(kCenters,temp_kCenters,term) || max==1000){
        //output count
-      for(int i=0;i<count.length;i++){
-        System.out.println(i+": "+count[i]);
-      }
+//      for(int i=0;i<count.length;i++){
+//        System.out.println(i+": "+count[i]);
+//      }
       System.out.println("Outer Loop Ran "+max+" times");
       break;
       
     }else{
       //update membership
       kCenters=temp_kCenters;
-      try{
-        writeToFile(membership,"final_membership");
-      }catch(Exception e){
-        System.out.println(e); 
-      }
+//      try{
+//        writeToFile(membership,"final_membership");
+//      }catch(Exception e){
+//        System.out.println(e); 
+//      }
       
       //update center
       
