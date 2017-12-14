@@ -166,6 +166,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
     JMenuItem fcmTransformationsMenuItem = new JMenuItem("FCM");
     JMenuItem gpcaTransformationsMenuItem = new JMenuItem("NPCA #1");
     JMenuItem npcaMultiSpectralTransformationsMenuItem = new JMenuItem("NPCA MultiSpectral #1");
+    JMenuItem fcmMultiSpectralTransformationsMenuItem = new JMenuItem("FCM MultiSpectral #1");
     JMenuItem customTransformationsMenuItem = new JMenuItem("Custom...");
 
     JMenuItem segmentationMenuItem = new JMenuItem("Segmentation");
@@ -254,6 +255,20 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       }
     }
     );
+    fcmMultiSpectralTransformationsMenuItem.addActionListener(
+                                                 new ActionListener()
+                                                   {
+      public void actionPerformed(ActionEvent ae)
+      {
+        // Call contrast enhancement method
+        ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
+        ImageFrame newImageFrame = new ImageFrame(multiSpectral_fCM());
+        desktopPane.add(newImageFrame);
+        newImageFrame.toFront();
+        try{newImageFrame.setSelected(true);}catch(Exception e){}
+      }
+    }
+    );
 
     // Add Item(s) to Transformations Menu
     transformationsMenu.add(grayscaleTransformationsMenuItem);
@@ -261,7 +276,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
     transformationsMenu.add(fcmTransformationsMenuItem);
     transformationsMenu.add(gpcaTransformationsMenuItem);
     transformationsMenu.add(npcaMultiSpectralTransformationsMenuItem);
-
+    transformationsMenu.add(fcmMultiSpectralTransformationsMenuItem);
   
     transformationsMenu.addSeparator();
     transformationsMenu.add(customTransformationsMenuItem);
@@ -773,6 +788,162 @@ protected double[][][] getPossibility(double[][][] memb){
   
   
 }
+
+//**************************************************************************
+protected Image fCM_multiSpectral(Image imageIn, int[][][] input){
+  Dimension imageInDimension = getImageDimension(imageIn);
+  //int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+  int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
+  int dim=input.length;
+  String inp = JOptionPane.showInputDialog("Enter Cluster");
+  int cluster=Integer.parseInt(inp);//Defind cluster value
+  inp = JOptionPane.showInputDialog("Enter Fuzziness");
+  int fuzziness=Integer.parseInt(inp);
+  
+  Random rand=new Random();
+  int width=(int)imageInDimension.getWidth();//column
+  int height=(int)imageInDimension.getHeight();//row
+  int max=1;
+  double kCenters[][]=new double[cluster][dim];
+  double term=0.000005;
+  double membership[][][] = new double[width][height][cluster];
+  double temp_membership[][][]= new double[width][height][cluster];
+  int[][] clusterColor=getClustersColor(cluster);
+  
+  //calculate initial membership of pixel to each cluster
+  for (int row = 0; row < imageInDimension.getHeight(); row++){
+    for (int column = 0; column < imageInDimension.getWidth(); column++)
+    {
+      double sum_Prob=0.0;
+      double remaining_Prob=100.0;
+      for(int i=0;i<cluster-1;i++){
+        double ran=rand.nextDouble()*remaining_Prob;
+        sum_Prob+=ran/100;
+        remaining_Prob-=ran;
+        membership[column][row][i]=ran/100;
+      }
+      membership[column][row][cluster-1]=1-sum_Prob;
+    }
+  }
+//  try{
+//    writeToFile(membership,"test");
+//  }catch(Exception e){
+//    System.out.println(e); 
+//  }
+
+  //calculate center for KClusters
+  //#3
+  for(int i=0;i<kCenters.length;i++){//cluster
+    for(int j=0;j<kCenters[i].length;j++){//RGB
+      double sum=0;
+      double den=0;
+      for (int row = 0; row < imageInDimension.getHeight(); row++){
+        for (int column = 0; column < imageInDimension.getWidth(); column++)
+        {
+          sum+=input[j][column][row]*(Math.pow(membership[column][row][i],fuzziness));
+          den+=Math.pow(membership[column][row][i],fuzziness);
+        }
+      }
+      //System.out.println(sum/den);
+      kCenters[i][j]=sum/den;
+      
+    }
+  }
+  
+  while(true){
+    for(int curr=0;curr<kCenters.length;curr++){//specific cluster for sum
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++)
+      {
+        double diff=0;
+        double coff=2/(fuzziness-1);
+        double neu=0;
+        double den=0;
+        double sum=0;
+        for(int j=0;j<kCenters.length;j++){//all cluster
+          
+          for(int d=0;d<dim;d++){
+          den+=Math.sqrt(Math.pow(input[d][column][row]-kCenters[j][d],2));
+          neu+=Math.sqrt(Math.pow(input[d][column][row]-kCenters[curr][d],2));
+          }
+          double div=Math.pow((neu/den),coff);
+          sum+=div;
+          
+        }
+        temp_membership[column][row][curr]=1/sum;
+              
+//        //update in return image
+//        for(int j=0;j<kCenters[curr].length;j++){
+//          update[j+1][column][row]=(int)(TRGB[j+1][column][row]*temp_membership[column][row][curr])+(50*curr);
+//        }
+        
+        
+      }//column end      
+    }//row end
+    }//cluster end
+    
+    //update to see output
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++)
+      {
+        int select=0;
+        
+        double val=temp_membership[column][row][0];
+        for(int curr=0;curr<kCenters.length;curr++){
+          if(temp_membership[column][row][curr]>val){
+            val=temp_membership[column][row][curr];
+            select=curr;
+          }
+        }
+        for(int i=1;i<4;i++){//RGB
+         update[i][column][row]=clusterColor[select][i-1];
+        }
+        
+      }
+    }
+   
+    
+    if(compareArray(membership,temp_membership,term) || max==1000){
+      System.out.println("Outer Loop Ran "+max+" times");
+      break;
+      
+    }else{
+      //update membership
+      membership=temp_membership;
+      
+//      try{
+//        writeToFile(membership,"test1");
+//      }catch(Exception e){
+//       System.out.println(e); 
+//      }
+      
+      //update center
+      
+      for(int i=0;i<kCenters.length;i++){//cluster
+        for(int j=0;j<kCenters[i].length;j++){//RGB
+          double sum=0;
+          double den=0;
+          for (int row = 0; row < imageInDimension.getHeight(); row++){
+            for (int column = 0; column < imageInDimension.getWidth(); column++)
+            {
+              sum+=input[j][column][row]*(Math.pow(membership[column][row][i],fuzziness));
+              den+=Math.pow(membership[column][row][i],fuzziness);
+            }
+          }
+          kCenters[i][j]=sum/den;
+         // System.out.println(kCenters[i][j]);
+          
+        }
+      }
+      
+      max++;
+    }
+  }//outer loop end
+  
+  
+  
+  return pixelsArrayToImage(TRGBArrayToPixelsArray(update, imageInDimension), imageInDimension);
+}
 //**************************************************************************  
 protected Image gpca_1(Image imageIn){
   Dimension imageInDimension = getImageDimension(imageIn);
@@ -1233,19 +1404,64 @@ protected int[][][] getImage(ImageFrame[] imageFrame1){
 }
 protected Image multiSpectral(){
   
-        ImageFrame imageFrame1=new ImageFrame(new File("images/bolivia-band1.gif"));
-        ImageFrame imageFrame2=new ImageFrame(new File("images/bolivia-band2.gif"));
-        ImageFrame imageFrame3=new ImageFrame(new File("images/bolivia-band3.gif"));
-        ImageFrame imageFrame4=new ImageFrame(new File("images/bolivia-band4.gif"));
-        ImageFrame imageFrame5=new ImageFrame(new File("images/bolivia-band5.gif"));
-        ImageFrame imageFrame6=new ImageFrame(new File("images/bolivia-band6.gif"));
-        ImageFrame imageFrame7=new ImageFrame(new File("images/bolivia-band7.gif"));
+//        ImageFrame imageFrame1=new ImageFrame(new File("images/bolivia-band1.gif"));
+//        ImageFrame imageFrame2=new ImageFrame(new File("images/bolivia-band2.gif"));
+//        ImageFrame imageFrame3=new ImageFrame(new File("images/bolivia-band3.gif"));
+//        ImageFrame imageFrame4=new ImageFrame(new File("images/bolivia-band4.gif"));
+//        ImageFrame imageFrame5=new ImageFrame(new File("images/bolivia-band5.gif"));
+//        ImageFrame imageFrame6=new ImageFrame(new File("images/bolivia-band6.gif"));
+//        ImageFrame imageFrame7=new ImageFrame(new File("images/bolivia-band7.gif"));
+        
+//                ImageFrame imageFrame1=new ImageFrame(new File("images/mono_lake-band1.gif"));
+//        ImageFrame imageFrame2=new ImageFrame(new File("images/mono_lake-band2.gif"));
+//        ImageFrame imageFrame3=new ImageFrame(new File("images/mono_lake-band3.gif"));
+//        ImageFrame imageFrame4=new ImageFrame(new File("images/mono_lake-band4.gif"));
+//        ImageFrame imageFrame5=new ImageFrame(new File("images/mono_lake-band5.gif"));
+//        ImageFrame imageFrame6=new ImageFrame(new File("images/mono_lake-band6.gif"));
+//        ImageFrame imageFrame7=new ImageFrame(new File("images/mono_lake-band7.gif"));
+//        
+                ImageFrame imageFrame1=new ImageFrame(new File("images/h1_enhanced.gif"));
+        ImageFrame imageFrame2=new ImageFrame(new File("images/h2_enhanced.gif"));
+        ImageFrame imageFrame3=new ImageFrame(new File("images/h3_enhanced.gif"));
+        ImageFrame imageFrame4=new ImageFrame(new File("images/h4_enhanced.gif"));
+        ImageFrame imageFrame5=new ImageFrame(new File("images/h5_enhanced.gif"));
         
         
-        ImageFrame[] img={imageFrame1,imageFrame2,imageFrame3,imageFrame4,imageFrame5,imageFrame6,imageFrame7};
+        ImageFrame[] img={imageFrame1,imageFrame2,imageFrame3,imageFrame4,imageFrame5};
         int[][][] out=getImage(img);
         System.out.println(out.length);
         return npca_1_m(imageFrame1.getImage(),out);
+  
+}
+protected Image multiSpectral_fCM(){
+  
+//        ImageFrame imageFrame1=new ImageFrame(new File("images/bolivia-band1.gif"));
+//        ImageFrame imageFrame2=new ImageFrame(new File("images/bolivia-band2.gif"));
+//        ImageFrame imageFrame3=new ImageFrame(new File("images/bolivia-band3.gif"));
+//        ImageFrame imageFrame4=new ImageFrame(new File("images/bolivia-band4.gif"));
+//        ImageFrame imageFrame5=new ImageFrame(new File("images/bolivia-band5.gif"));
+//        ImageFrame imageFrame6=new ImageFrame(new File("images/bolivia-band6.gif"));
+//        ImageFrame imageFrame7=new ImageFrame(new File("images/bolivia-band7.gif"));
+        
+//                ImageFrame imageFrame1=new ImageFrame(new File("images/mono_lake-band1.gif"));
+//        ImageFrame imageFrame2=new ImageFrame(new File("images/mono_lake-band2.gif"));
+//        ImageFrame imageFrame3=new ImageFrame(new File("images/mono_lake-band3.gif"));
+//        ImageFrame imageFrame4=new ImageFrame(new File("images/mono_lake-band4.gif"));
+//        ImageFrame imageFrame5=new ImageFrame(new File("images/mono_lake-band5.gif"));
+//        ImageFrame imageFrame6=new ImageFrame(new File("images/mono_lake-band6.gif"));
+//        ImageFrame imageFrame7=new ImageFrame(new File("images/mono_lake-band7.gif"));
+//        
+                ImageFrame imageFrame1=new ImageFrame(new File("images/h1_enhanced.gif"));
+        ImageFrame imageFrame2=new ImageFrame(new File("images/h2_enhanced.gif"));
+        ImageFrame imageFrame3=new ImageFrame(new File("images/h3_enhanced.gif"));
+        ImageFrame imageFrame4=new ImageFrame(new File("images/h4_enhanced.gif"));
+        ImageFrame imageFrame5=new ImageFrame(new File("images/h5_enhanced.gif"));
+        
+        
+        ImageFrame[] img={imageFrame1,imageFrame2,imageFrame3,imageFrame4,imageFrame5};
+        int[][][] out=getImage(img);
+        System.out.println(out.length);
+        return fCM_multiSpectral(imageFrame1.getImage(),out);
   
 }
 
