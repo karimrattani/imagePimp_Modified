@@ -22,6 +22,7 @@ import java.util.Random;
 import java.lang.*;
 import java.io.*;
 import java.util.Scanner;
+import javax.imageio.ImageIO;
 // Class Definition(s) /////////////////////////////////////////////////////
 // ImagePimp
 public class ImagePimpMinh extends JFrame //implements ActionListener
@@ -618,7 +619,7 @@ protected Image fCM(Image imageIn){
   String inp = JOptionPane.showInputDialog("Enter Cluster");
   int cluster=Integer.parseInt(inp);//Defind cluster value
   inp = JOptionPane.showInputDialog("Enter Fuzziness");
-  int fuzziness=Integer.parseInt(inp);
+  Double fuzziness=Double.parseDouble(inp);
   
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
@@ -813,7 +814,7 @@ protected Image gpca_1(Image imageIn){
   String inp = JOptionPane.showInputDialog("Enter Cluster");
   int cluster=Integer.parseInt(inp);//Defind cluster value
   inp = JOptionPane.showInputDialog("Enter Fuzziness");
-  int fuzziness=Integer.parseInt(inp);
+  Double fuzziness=Double.parseDouble(inp);
   
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
@@ -1301,12 +1302,13 @@ class ImageFrame extends JInternalFrame
    try{
      BufferedImage image = new BufferedImage(col, row, BufferedImage.TYPE_3BYTE_BGR);
      image.setRGB(0,0,col,row,pixels,0,col);
-     OutputStream os = new FileOutputStream(imageFile);
-     JPEGEncodeParam param = new JPEGEncodeParam();
-     ImageEncoder enc = ImageCodec.createImageEncoder("JPEG",os,param);
-     
-     enc.encode(image);
-     os.close();
+     ImageIO.write(image,"jpg",imageFile);
+//     OutputStream os = new FileOutputStream(imageFile);
+//     JPEGEncodeParam param = new JPEGEncodeParam();
+//     ImageEncoder enc = ImageCodec.createImageEncoder("JPEG",os,param);
+//     
+//     enc.encode(image);
+//     os.close();
      
      /*FileOutputStream os = new FileOutputStream(imageFile);
       JAI.create("encode",imagePanel.getImageIcon().getImage(),os,JPG,null);
