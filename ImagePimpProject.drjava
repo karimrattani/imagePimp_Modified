@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<drjava version="drjava-20160913-225446">
+  <project autorefresh="false" main="Launch" manifest="" root="" work="">
+    <createjar file="ImagePimpMinh.jar" flags="12"/>
+    <source>
+      <file active="true" name="Launch.java" package="" timestamp="23-Dec-2017 10:00:09">
+        <select from="114" to="114"/>
+        <scroll column="0" row="0"/>
+      </file>
+      <file name="ImagePimpMinh.java" package="" timestamp="30-Dec-2017 11:43:37">
+        <select from="114" to="114"/>
+        <scroll column="0" row="0"/>
+      </file>
+    </source>
+    <included/>
+    <excluded/>
+    <collapsed/>
+    <classpath>
+      <file absolute="false" name="extra_path/sun-jai_codec.jar"/>
+      <file absolute="false" name="extra_path/sun-jai_core.jar"/>
+    </classpath>
+    <breakpoints/>
+    <watches/>
+    <bookmarks/>
+    <preferences/>
+  </project>
+</drjava>

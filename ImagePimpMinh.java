@@ -95,8 +95,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
        // Open a file dialog box to choose a file
        JFileChooser fileChooser = new JFileChooser();
        
-       fileChooser.setCurrentDirectory(new File("C:"+System.getProperty("file.separator")+"Users"+System.getProperty("file.separator")+"Karim"+System.getProperty("file.separator")+"Desktop"+System.getProperty("file.separator")+"Git-Repos"+System.getProperty("file.separator")+"imagePimp_Modified"+System.getProperty("file.separator")+"images"));
-
+       fileChooser.setCurrentDirectory(new File("."));
        // Initialize dialog box
        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
@@ -129,7 +128,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       public void actionPerformed(ActionEvent ae)
       {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setCurrentDirectory(new File("C:"+System.getProperty("file.separator")+"Users"+System.getProperty("file.separator")+"Karim"+System.getProperty("file.separator")+"Desktop"+System.getProperty("file.separator")+"Git-Repos"+System.getProperty("file.separator")+"imagePimp_Modified"+System.getProperty("file.separator")+"images"));
+        fileChooser.setCurrentDirectory(new File("."));
         // Initialize dialog box
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         
