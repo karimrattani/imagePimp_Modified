@@ -1,23 +1,6 @@
-import java.applet.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import javax.swing.*;
 import javax.swing.JOptionPane;
-import javax.media.jai.*;
-import javax.swing.*;
-//import javax.media.jai.PlanarImage;
-import java.text.DecimalFormat;
-import com.sun.media.jai.codec.*;
-import javax.swing.ImageIcon;
 import java.util.Random;
-import java.lang.*;
-import java.io.*;
-import java.util.Scanner;
-
 public class getMultiSpectral extends ImagePimpMinh{
   Image imageIn;
   int[][][] input;
@@ -125,13 +108,11 @@ private Image npca_1_m(Image imageIn,int[][][] input){
     for (int row = 0; row < imageInDimension.getHeight(); row++){
       for (int column = 0; column < imageInDimension.getWidth(); column++)
       {
-        double diff=0;
-        double coff=2/(fuzziness-1);
+       
         double dist=0;
         double neu=0;
         double den=0;
         double sum=0;
-        double param_f=0;
         double all_clus_dist;
         //Equation 14
 
