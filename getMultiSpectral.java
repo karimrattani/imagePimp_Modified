@@ -5,10 +5,15 @@ public class getMultiSpectral extends ImagePimpMinh{
   Image imageIn;
   int[][][] input;
   int alg;
-  public getMultiSpectral(int alg,Image imageIn,int[][][] input){
+  int cluster;
+  double fuzziness;
+  public getMultiSpectral(int alg,Image imageIn,int[][][] input,int cluster, double fuzziness){
     this.alg=alg;
     this.imageIn=imageIn;
     this.input=input;
+    this.cluster=cluster;
+    this.fuzziness=fuzziness;
+    
 
 
   }
@@ -22,6 +27,9 @@ public Image getResult(){
     }else if(alg==3){
       System.out.println("NPCA #1 MultiSpectral");
       return npca_1_m(imageIn,input);
+    }else if(alg==4){
+      System.out.println("GPCA #1 MultiSpectral");
+      return gpca_1_m(imageIn,input);
     }else{
       System.out.println("Invalid alg value");
       return imageIn;
@@ -31,12 +39,6 @@ private Image npca_1_m(Image imageIn,int[][][] input){
   Dimension imageInDimension = getImageDimension(imageIn);
   //int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-
-  String inp = JOptionPane.showInputDialog("Enter Cluster");
-  int cluster=Integer.parseInt(inp);//Defind cluster value
-  inp = JOptionPane.showInputDialog("Enter Fuzziness");
-  double fuzziness=Double.parseDouble(inp);
-
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
   int height=(int)imageInDimension.getHeight();//row
@@ -47,6 +49,7 @@ private Image npca_1_m(Image imageIn,int[][][] input){
   double kCenters[][]=new double[cluster][dim];
   double term=0;
   double membership[][][] = new double[width][height][cluster];
+  double temp_membership[][][] = new double[width][height][cluster];
   double poss[][][]=new double[width][height][cluster];
   double temp_kCenters[][]=new double[cluster][dim];
   int count[]=new int[cluster];
@@ -68,20 +71,8 @@ private Image npca_1_m(Image imageIn,int[][][] input){
     }
   }
 
-//  try{
-//    writeToFile(membership,"random_generate");
-//  }catch(Exception e){
-//    System.out.println(e);
-//  }
-
   //calculate possibility
   poss=getPossibility(membership);
-
-//  try{
-//    writeToFile(poss,"initial_poss");
-//  }catch(Exception e){
-//    System.out.println(e);
-//  }
 
   //calculate center for KClusters
   //#3
@@ -144,39 +135,39 @@ private Image npca_1_m(Image imageIn,int[][][] input){
             f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
           }
 
-          membership[column][row][curr]=f;
+          temp_membership[column][row][curr]=f;
 
 
 
       }//column end
     }//row end
     }//cluster end
+    if(checkMembership(membership,temp_membership,term) || max==1000){
 
-    //update possibility
-    System.out.println("Getting Possibility");
-    poss=getPossibility(membership);
-
-//    try{
-//      writeToFile(poss,"final_poss");
-//    }catch(Exception e){
-//      System.out.println(e);
-//    }
-    System.out.println("Updating Centers");
+      System.out.println("Outer Loop Ran "+max+" times");
+      break;
+      
+    }else{
+      membership=temp_membership;
+      System.out.println("Getting Possibility");
+      poss=getPossibility(membership);
+      System.out.println("Updating Centers");
     //update centers
-    for(int i=0;i<kCenters.length;i++){//cluster
-      for(int j=0;j<kCenters[i].length;j++){//RGB
-        double sum=0;
-        double den=0;
-        for (int row = 0; row < imageInDimension.getHeight(); row++){
-          for (int column = 0; column < imageInDimension.getWidth(); column++)
-          {
-            sum+=input[j][column][row]*(Math.pow(poss[column][row][i],fuzziness));//equation #25
-            den+=Math.pow(poss[column][row][i],fuzziness);
+      for(int i=0;i<kCenters.length;i++){//cluster
+        for(int j=0;j<kCenters[i].length;j++){//RGB
+          double sum=0;
+          double den=0;
+          for (int row = 0; row < imageInDimension.getHeight(); row++){
+            for (int column = 0; column < imageInDimension.getWidth(); column++)
+            {
+              sum+=input[j][column][row]*(Math.pow(poss[column][row][i],fuzziness));//equation #25
+              den+=Math.pow(poss[column][row][i],fuzziness);
+            }
           }
+          
+          kCenters[i][j]=sum/den;
+          
         }
-
-        temp_kCenters[i][j]=sum/den;
-
       }
     }
 
@@ -202,25 +193,134 @@ private Image npca_1_m(Image imageIn,int[][][] input){
 
       }
     }
-    if(checkArray(kCenters,temp_kCenters,term) || max==1000){
-       //output count
-//      for(int i=0;i<count.length;i++){
-//        System.out.println(i+": "+count[i]);
-//      }
+    max++;
+  }//outer loop end
+  return pixelsArrayToImage(TRGBArrayToPixelsArray(update, imageInDimension), imageInDimension);
+}
+
+/*---------------
+ *
+ *
+ *
+ * */
+private Image gpca_1_m(Image imageIn,int[][][] input){
+  Dimension imageInDimension = getImageDimension(imageIn);
+  //int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+  int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
+  Random rand=new Random();
+  int width=(int)imageInDimension.getWidth();//column
+  int height=(int)imageInDimension.getHeight();//row
+
+  int max=1;
+  int dim = input.length;
+  System.out.println(dim);
+  double kCenters[][]=new double[cluster][dim];
+  double term=0;
+  double membership[][][] = new double[width][height][cluster];
+  double temp_membership[][][] = new double[width][height][cluster];
+  double poss[][][]=new double[width][height][cluster];
+  double temp_kCenters[][]=new double[cluster][dim];
+  int count[]=new int[cluster];
+  int[][] clusterColor=getClustersColor(cluster);
+
+  //calculate initial membership of pixel to each cluster
+  for (int row = 0; row < imageInDimension.getHeight(); row++){
+    for (int column = 0; column < imageInDimension.getWidth(); column++)
+    {
+      double sum_Prob=0.0;
+      double remaining_Prob=100.0;
+      for(int i=0;i<cluster-1;i++){
+        double ran=rand.nextDouble()*remaining_Prob;
+        sum_Prob+=ran/100;
+        remaining_Prob-=ran;
+        membership[column][row][i]=ran/100;
+      }
+      membership[column][row][cluster-1]=1-sum_Prob;
+    }
+  }
+
+  //calculate possibility
+  poss=getPossibility(membership);
+
+  //calculate center for KClusters
+  //#3
+  for(int i=0;i<kCenters.length;i++){//cluster
+    for(int j=0;j<kCenters[i].length;j++){//RGB
+      double sum=0;
+      double den=0;
+      for (int row = 0; row < imageInDimension.getHeight(); row++){
+        for (int column = 0; column < imageInDimension.getWidth(); column++)
+        {
+          sum+=input[j][column][row]*(Math.pow(membership[column][row][i],fuzziness));//equation #25
+          den+=Math.pow(membership[column][row][i],fuzziness);
+        }
+      }
+     // System.out.println(sum/den);
+      kCenters[i][j]=sum/den;
+
+    }
+  }
+  System.out.println("Starting Loop");
+  while(true){
+    System.out.println("Inside Loop for"+max);
+    for(int curr=0;curr<kCenters.length;curr++){//specific cluster for sum
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++)
+      {
+       
+        double dist=0;
+        double neu=0;
+        double den=0;
+        double sum=0;
+        double all_clus_dist;
+        //Equation 14
+
+        //average fuzzy intracluster distance of cluster
+
+        for(int j=0;j<kCenters.length;j++){//all cluster
+          all_clus_dist=0;
+          for(int d=0;d<dim;d++){
+          all_clus_dist+=Math.pow(input[d][column][row]-kCenters[j][d],2);
+          }
+          all_clus_dist=Math.sqrt(all_clus_dist);
+          neu+=Math.pow(membership[column][row][j],fuzziness)*Math.pow(all_clus_dist,2);
+          den+=Math.pow(membership[column][row][j],fuzziness);
+          //sum+=neu/den;
+        }
+          sum=Math.sqrt(neu/den);
+          dist=0;
+          for(int d=0;d<dim;d++){
+          dist+=Math.pow(input[d][column][row]-kCenters[curr][0],2);
+          }
+          dist=Math.sqrt(dist);
+          //calculate membership
+          double f=0;
+          if(dist==0){
+            f=1;
+          }else if(dist==1){
+            f=0;
+          }else{
+            f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
+          }
+
+          temp_membership[column][row][curr]=f;
+
+
+
+      }//column end
+    }//row end
+    }//cluster end
+    if(checkMembership(membership,temp_membership,term) || max==1000){
+
       System.out.println("Outer Loop Ran "+max+" times");
       break;
-
+      
     }else{
-      //update membership
-      kCenters=temp_kCenters;
-//      try{
-//        writeToFile(membership,"final_membership");
-//      }catch(Exception e){
-//        System.out.println(e);
-//      }
-
-      //update center
-
+      membership=temp_membership;
+      System.out.println("Getting Possibility");
+      poss=getPossibility(membership);
+      System.out.println("Updating Centers");
+    //update centers
       for(int i=0;i<kCenters.length;i++){//cluster
         for(int j=0;j<kCenters[i].length;j++){//RGB
           double sum=0;
@@ -228,21 +328,44 @@ private Image npca_1_m(Image imageIn,int[][][] input){
           for (int row = 0; row < imageInDimension.getHeight(); row++){
             for (int column = 0; column < imageInDimension.getWidth(); column++)
             {
-              sum+=input[j][column][row]*(Math.pow(membership[column][row][i],fuzziness));
+              sum+=input[j][column][row]*(Math.pow(membership[column][row][i],fuzziness));//equation #25
               den+=Math.pow(membership[column][row][i],fuzziness);
             }
           }
+          
           kCenters[i][j]=sum/den;
-         // System.out.println(kCenters[i][j]);
-
+          
         }
       }
-
-      max++;
     }
+
+    //update to see output
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++)
+      {
+        int select=0;
+
+        double val=membership[column][row][0];
+        for(int curr=0;curr<kCenters.length;curr++){
+          if(membership[column][row][curr]>val){
+            val=membership[column][row][curr];
+            select=curr;
+          }
+        }
+        count[select]++;
+
+        for(int i=1;i<4;i++){//RGB
+            update[i][column][row]=clusterColor[select][i-1];
+        }
+
+
+      }
+    }
+    max++;
   }//outer loop end
   return pixelsArrayToImage(TRGBArrayToPixelsArray(update, imageInDimension), imageInDimension);
 }
+
 /*---------------
  *
  *
@@ -253,10 +376,6 @@ protected Image fCM_multiSpectral(Image imageIn, int[][][] input){
   //int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
   int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
   int dim=input.length;
-  String inp = JOptionPane.showInputDialog("Enter Cluster");
-  int cluster=Integer.parseInt(inp);//Defind cluster value
-  inp = JOptionPane.showInputDialog("Enter Fuzziness");
-  double fuzziness=Double.parseDouble(inp);
 
   Random rand=new Random();
   int width=(int)imageInDimension.getWidth();//column
@@ -414,8 +533,7 @@ protected Image fCM_multiSpectral(Image imageIn, int[][][] input){
    Dimension imageInDimension = getImageDimension(imageIn);
    //int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
    int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-   String inp = JOptionPane.showInputDialog("Enter Cluster");
-   int k=Integer.parseInt(inp);//Defind cluster value
+   int k=cluster;
    int dim=input.length;
    //get random centers for K clusters
    int width=(int)imageInDimension.getWidth();

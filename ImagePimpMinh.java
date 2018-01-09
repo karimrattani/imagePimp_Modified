@@ -23,6 +23,7 @@ import java.lang.*;
 import java.io.*;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
+import java.util.Collections;
 // Class Definition(s) /////////////////////////////////////////////////////
 // ImagePimp
 public class ImagePimpMinh extends JFrame //implements ActionListener
@@ -164,9 +165,11 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
     JMenuItem grayscaleTransformationsMenuItem = new JMenuItem("Grayscale");
     JMenuItem kMeansTransformationsMenuItem = new JMenuItem("K-Means");
     JMenuItem fcmTransformationsMenuItem = new JMenuItem("FCM");
-    JMenuItem gpcaTransformationsMenuItem = new JMenuItem("NPCA #1");
+    JMenuItem gpcaTransformationsMenuItem = new JMenuItem("GPCA #1");
+    JMenuItem npcaTransformationsMenuItem = new JMenuItem("NPCA #1");
     JMenuItem fcmMultiSpectralTransformationsMenuItem = new JMenuItem("FCM MultiSpectral #1");
     JMenuItem npcaMultiSpectralTransformationsMenuItem = new JMenuItem("NPCA MultiSpectral #1");
+    JMenuItem gpcaMultiSpectralTransformationsMenuItem = new JMenuItem("GPCA MultiSpectral #1");
     JMenuItem kMeansMultiSpectralTransformationsMenuItem = new JMenuItem("kMeans MultiSpectral #1");
     JMenuItem customTransformationsMenuItem = new JMenuItem("Custom...");
 
@@ -228,7 +231,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       }
     }
     );
-    gpcaTransformationsMenuItem.addActionListener(
+    npcaTransformationsMenuItem.addActionListener(
                                                  new ActionListener()
                                                    {
       public void actionPerformed(ActionEvent ae)
@@ -236,6 +239,20 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
         // Call contrast enhancement method
         ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
         ImageFrame newImageFrame = new ImageFrame(npca_1(imageFrame.getImage()));
+        desktopPane.add(newImageFrame);
+        newImageFrame.toFront();
+        try{newImageFrame.setSelected(true);}catch(Exception e){}
+      }
+    }
+    );
+    gpcaTransformationsMenuItem.addActionListener(
+                                                 new ActionListener()
+                                                   {
+      public void actionPerformed(ActionEvent ae)
+      {
+        // Call contrast enhancement method
+        ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
+        ImageFrame newImageFrame = new ImageFrame(gpca_1(imageFrame.getImage()));
         desktopPane.add(newImageFrame);
         newImageFrame.toFront();
         try{newImageFrame.setSelected(true);}catch(Exception e){}
@@ -281,15 +298,30 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       }
     }
     );
+    gpcaMultiSpectralTransformationsMenuItem.addActionListener(
+                                                 new ActionListener()
+                                                   {
+      public void actionPerformed(ActionEvent ae)
+      {
+        // Call contrast enhancement method
+        ImageFrame newImageFrame = new ImageFrame(multiSpectral(4));
+        desktopPane.add(newImageFrame);
+        newImageFrame.toFront();
+        try{newImageFrame.setSelected(true);}catch(Exception e){}
+      }
+    }
+    );
 
     // Add Item(s) to Transformations Menu
     transformationsMenu.add(grayscaleTransformationsMenuItem);
     transformationsMenu.add(kMeansTransformationsMenuItem);
     transformationsMenu.add(fcmTransformationsMenuItem);
+    transformationsMenu.add(npcaTransformationsMenuItem);
     transformationsMenu.add(gpcaTransformationsMenuItem);
     transformationsMenu.add(npcaMultiSpectralTransformationsMenuItem);
     transformationsMenu.add(fcmMultiSpectralTransformationsMenuItem);
     transformationsMenu.add(kMeansMultiSpectralTransformationsMenuItem);
+    transformationsMenu.add(gpcaMultiSpectralTransformationsMenuItem);
   
     transformationsMenu.addSeparator();
     transformationsMenu.add(customTransformationsMenuItem);
@@ -923,18 +955,12 @@ protected Image npca_1(Image imageIn){
       }//column end      
     }//row end
     }//cluster end
-    
-    
-    
+
     //check if old and new membership are same
     if(checkMembership(membership,temp_membership,term) || max==1000){
-       //output count
-//      for(int i=0;i<count.length;i++){
-//        System.out.println(i+": "+count[i]);
-//      }
+      double res=XB_Index(membership,kCenters,TRGB,imageInDimension);
       System.out.println("Outer Loop Ran "+max+" times");
       break;
-      
     }else{
       membership=temp_membership;
         //update possibility
@@ -952,7 +978,255 @@ protected Image npca_1(Image imageIn){
             }
           }
           
-          temp_kCenters[i][j]=sum/den;
+          kCenters[i][j]=sum/den;
+          
+        }
+      }
+    }//else end
+    
+
+    //update to see output
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++)
+      {
+        int select=0;
+        
+        double val=membership[column][row][0];
+        for(int curr=0;curr<kCenters.length;curr++){
+          if(membership[column][row][curr]>val){
+            val=membership[column][row][curr];
+            select=curr;
+          }
+        }
+        count[select]++;
+        
+        for(int i=1;i<4;i++){//RGB
+            update[i][column][row]=clusterColor[select][i-1];
+        }
+        
+        
+      }
+    }
+    
+    max++;
+
+//    if(checkArray(kCenters,temp_kCenters,term) || max==1000){
+//       //output count
+////      for(int i=0;i<count.length;i++){
+////        System.out.println(i+": "+count[i]);
+////      }
+//      System.out.println("Outer Loop Ran "+max+" times");
+//      break;
+//      
+//    }else{
+//      //update membership
+//      kCenters=temp_kCenters;
+////      try{
+////        writeToFile(membership,"final_membership");
+////      }catch(Exception e){
+////        System.out.println(e); 
+////      }
+//      
+//      //update center
+//      
+//      for(int i=0;i<kCenters.length;i++){//cluster
+//        for(int j=0;j<kCenters[i].length;j++){//RGB
+//          double sum=0;
+//          double den=0;
+//          for (int row = 0; row < imageInDimension.getHeight(); row++){
+//            for (int column = 0; column < imageInDimension.getWidth(); column++)
+//            {
+//              sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));
+//              den+=Math.pow(membership[column][row][i],fuzziness);
+//            }
+//          }
+//          kCenters[i][j]=sum/den;
+//         // System.out.println(kCenters[i][j]);
+//          
+//        }
+//      }
+      
+     
+    //}
+  }//outer loop end
+  
+  
+  
+  return pixelsArrayToImage(TRGBArrayToPixelsArray(update, imageInDimension), imageInDimension);
+}
+
+//******************************************************************************************************
+//******************************************************************************************************
+
+protected double XB_Index(double[][][] membership,double[][] kCenter, int[][][] TRGB, Dimension imageInDimension){
+  double sum=0;
+  int cluster=kCenter.length;
+  
+  ArrayList<Double> distArr=new ArrayList<Double>();
+  
+  for(int i=0;i<cluster-1;i++){//add all but last distance
+    double dist;
+    dist=Math.sqrt(Math.pow(kCenter[i][0]-kCenter[i+1][0],2)+Math.pow(kCenter[i][1]-kCenter[i+1][1],2)+Math.pow(kCenter[i][2]-kCenter[i+1][2],2));
+    System.out.println("Cluster Value: "+i+" Distance: "+dist);
+    distArr.add(dist);
+  }
+  double LastDist=Math.sqrt(Math.pow(kCenter[cluster-1][0]-kCenter[0][0],2)+Math.pow(kCenter[cluster-1][1]-kCenter[0][1],2)+Math.pow(kCenter[cluster-1][2]-kCenter[0][2],2));//add last distance
+  distArr.add(LastDist);
+  Collections.sort(distArr);
+  int width=(int)imageInDimension.getWidth();//column
+  int height=(int)imageInDimension.getHeight();//row
+  for (int row = 0; row < height; row++){
+      for (int column = 0; column < width; column++)
+      {
+        for(int k=0;k<cluster;k++){
+          double x = Math.pow(membership[column][row][k],2);
+          double dist=Math.pow(TRGB[1][column][row]-kCenter[k][0],2)+Math.pow(TRGB[2][column][row]-kCenter[k][1],2)+Math.pow(TRGB[3][column][row]-kCenter[k][2],2);
+          sum+=x*dist;
+        }
+      }
+  }
+  System.out.println(width*height);
+  double result=sum/(distArr.get(0)*(90000));
+  System.out.println(result);
+   
+  
+  
+  return result;
+}
+//******************************************************************************************************
+//******************************************************************************************************
+//******************************************************************************************************
+
+protected Image gpca_1(Image imageIn){
+  Dimension imageInDimension = getImageDimension(imageIn);
+  int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+  int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
+  
+  String inp = JOptionPane.showInputDialog("Enter Cluster");
+  int cluster=Integer.parseInt(inp);//Defind cluster value
+  inp = JOptionPane.showInputDialog("Enter Fuzziness");
+  Double fuzziness=Double.parseDouble(inp);
+  
+  Random rand=new Random();
+  int width=(int)imageInDimension.getWidth();//column
+  int height=(int)imageInDimension.getHeight();//row
+  
+  int max=1;
+  double kCenters[][]=new double[cluster][3];
+  double term=0.00001;
+  double membership[][][] = new double[width][height][cluster];
+  double temp_membership[][][] = new double[width][height][cluster];
+  double poss[][][]=new double[width][height][cluster];
+  double temp_kCenters[][]=new double[cluster][3];
+  int count[]=new int[cluster];
+  int[][] clusterColor=getClustersColor(cluster);
+  Random r = new Random();
+  
+  //calculate initial membership of pixel to each cluster
+  for (int row = 0; row < imageInDimension.getHeight(); row++){
+    for (int column = 0; column < imageInDimension.getWidth(); column++)
+    {
+      double sum_Prob=0.0;
+      double remaining_Prob=100.0;
+      for(int i=0;i<cluster-1;i++){
+        double ran=rand.nextDouble()*remaining_Prob;
+        sum_Prob+=ran/100;
+        remaining_Prob-=ran;
+        membership[column][row][i]=ran/100;
+      }
+      membership[column][row][cluster-1]=1-sum_Prob;
+    }
+  }
+  
+  //calculate possibility
+  poss=getPossibility(membership);
+
+  //calculate center for KClusters
+  //#3
+  for(int i=0;i<kCenters.length;i++){//cluster
+    for(int j=0;j<kCenters[i].length;j++){//RGB
+      double sum=0;
+      double den=0;
+      for (int row = 0; row < imageInDimension.getHeight(); row++){
+        for (int column = 0; column < imageInDimension.getWidth(); column++)
+        {
+          sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));//equation #25
+          den+=Math.pow(membership[column][row][i],fuzziness);
+        }
+      }
+     // System.out.println(sum/den);
+      kCenters[i][j]=sum/den;
+      
+    }
+  }
+  
+  while(true){
+    for(int curr=0;curr<kCenters.length;curr++){//specific cluster for sum
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++)
+      {
+        double diff=0;
+        double dist=0;
+        double neu=0;
+        double den=0;
+        double sum=0;
+        double param_f=0;
+        double all_clus_dist=0;
+        //Equation 14
+        
+        //average fuzzy intracluster distance of cluster 
+        
+        for(int j=0;j<kCenters.length;j++){//all cluster
+          all_clus_dist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[j][0],2)+Math.pow(TRGB[2][column][row]-kCenters[j][1],2)+Math.pow(TRGB[3][column][row]-kCenters[j][2],2));
+          neu+=Math.pow(membership[column][row][j],fuzziness)*Math.pow(all_clus_dist,2);
+          den+=Math.pow(membership[column][row][j],fuzziness);
+          //sum+=(neu/den);
+        }
+        
+        sum=Math.sqrt(neu/den);
+        dist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[curr][0],2)+Math.pow(TRGB[2][column][row]-kCenters[curr][1],2)+Math.pow(TRGB[3][column][row]-kCenters[curr][2],2));//current cluster distance
+          
+          //calculate membership
+          double f=0;
+          if(dist==0){
+            f=1;
+          }else if(dist==1){
+            f=0;
+          }else{
+            f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
+          }
+          
+          temp_membership[column][row][curr]=f;
+              
+        
+        
+      }//column end      
+    }//row end
+    }//cluster end
+
+    //check if old and new membership are same
+    if(checkMembership(membership,temp_membership,term) || max==1000){
+      double res=XB_Index(membership,kCenters,TRGB,imageInDimension);
+      System.out.println("Outer Loop Ran "+max+" times");
+      break;
+    }else{
+      membership=temp_membership;
+        //update possibility
+      poss=getPossibility(membership);
+      //update centers
+      for(int i=0;i<kCenters.length;i++){//cluster
+        for(int j=0;j<kCenters[i].length;j++){//RGB
+          double sum=0;
+          double den=0;
+          for (int row = 0; row < imageInDimension.getHeight(); row++){
+            for (int column = 0; column < imageInDimension.getWidth(); column++)
+            {
+              sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));//equation #25
+              den+=Math.pow(membership[column][row][i],fuzziness);
+            }
+          }
+          
+          kCenters[i][j]=sum/den;
           
         }
       }
@@ -1078,12 +1352,23 @@ protected Image multiSpectral(int alg){
         ImageFrame imageFrame3=new ImageFrame(new File("images/h3_enhanced.gif"));
         ImageFrame imageFrame4=new ImageFrame(new File("images/h4_enhanced.gif"));
         ImageFrame imageFrame5=new ImageFrame(new File("images/h5_enhanced.gif"));
-        
-        
+        int cluster=0;
+        double fuzziness=0;
+        if(alg==1){
+            String inp = JOptionPane.showInputDialog("Enter Cluster");
+            cluster=Integer.parseInt(inp);//Defind cluster value
+        }else{
+          String inp = JOptionPane.showInputDialog("Enter Cluster");
+          cluster=Integer.parseInt(inp);//Defind cluster value
+          inp = JOptionPane.showInputDialog("Enter Fuzziness");
+          fuzziness=Double.parseDouble(inp);
+          
+          
+        }
         ImageFrame[] img={imageFrame1,imageFrame2,imageFrame3,imageFrame4,imageFrame5};
         int[][][] out=getImage(img);
         
-        getMultiSpectral multi=new getMultiSpectral(alg,imageFrame1.getImage(),out);
+        getMultiSpectral multi=new getMultiSpectral(alg,imageFrame1.getImage(),out,cluster,fuzziness);
         
         Image res=multi.getResult();
         return res;
