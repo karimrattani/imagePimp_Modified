@@ -24,7 +24,7 @@ public class FCM{
     clusterColor=ImageTools.getClustersColor(cluster);
   } 
   public Image get_FCM(){
-    int update[][][] = new int[4][this.width][this.height];
+    int update[][][] = new int[dim][this.width][this.height];
     double term=0.00001;
     double membership[][][] = new double[width][height][cluster];
     double temp_membership[][][]= new double[width][height][cluster];
@@ -89,10 +89,12 @@ public class FCM{
         for (int row = 0; row < this.imageInDimension.getHeight(); row++){
           for (int column = 0; column < this.imageInDimension.getWidth(); column++)
           {
+            
             num+=this.input[j][column][row]*(Math.pow(membership[column][row][i],this.fuzziness));
-            den+=Math.pow(membership[column][row][i],fuzziness);
+            den+=Math.pow(membership[column][row][i],this.fuzziness);
           }
         }
+        
         //System.out.println(sum/den);
         kCenters[i][j]=num/den;
         
@@ -115,7 +117,7 @@ public class FCM{
           double den=0;
           double sum=0;
           for(int j=0;j<kCenters.length;j++){//all cluster
-            for(int d=0;d<this.dim;d++){
+            for(int d=1;d<this.dim;d++){
               den+=(Math.pow(this.input[d][column][row]-kCenters[j][d],2));
               neu+=(Math.pow(this.input[d][column][row]-kCenters[curr][d],2));
             }
