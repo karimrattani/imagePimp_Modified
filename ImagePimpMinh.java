@@ -547,7 +547,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
          double tempDist=0;
          // int colorIndex=0;//red
          int clusterIndex=0;
-         for(int i=0;i<kCenters.length;i++){
+         for(int i=1;i<kCenters.length;i++){
            tempDist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[i][0],2)+Math.pow(TRGB[2][column][row]-kCenters[i][1],2)+Math.pow(TRGB[3][column][row]-kCenters[i][2],2));
            if(tempDist<dist){
              dist=tempDist;
@@ -1366,147 +1366,147 @@ protected Image multiSpectral(int alg){
 
 }
 
-class ImageFrame extends JInternalFrame
-{
-
- // Instance Variable(s) ////////////////////////////////////////////
- // Constant(s)
-
- // Data Member(s)
- // Private
- private File imageFile;
- private ImagePanel imagePanel;
-
- // Protected
-
- // Public
-
- // Constructor(s) //////////////////////////////////////////////////
- public ImageFrame(File imageFile)
- {
-
-  // Call super class, JInternalFrame constructor
-  super(imageFile.getName(), false, true, false);
-
-  // Attempt to load image
-  imagePanel = new ImagePanel(imageFile);
-  getContentPane().add(imagePanel);
-
-  // Set the internal image file to the passed arguement
-  this.imageFile = imageFile;
-  this.setTitle(imageFile.getName());
-  // Initialize and show the internal frame window
-  setSize(imagePanel.getImageIcon().getIconWidth(), imagePanel.getImageIcon().getIconHeight());
-  show();
-  toFront();
- }
-
- public ImageFrame(Image image)
- {
-
-  // Call super class, JInternalFrame constructor
-  super("Untitled", false, true, false);
-
-  // Attempt to load image
-  imagePanel = new ImagePanel(image);
-  getContentPane().add(imagePanel);
-
-  // Set the internal image file to a default name
-  imageFile = null;
-
-  // Initialize and show the internal frame window
-  setSize(imagePanel.getImageIcon().getIconWidth(), imagePanel.getImageIcon().getIconHeight());
-  show();
-  toFront();
- }
-
- // Finalize ////////////////////////////////////////////////////////
-
- // Method(s) ///////////////////////////////////////////////////////
- // Private
-
- // Protected
-
- // Public
- public Image getImage()
- {
-
-  // Return the image icon from the image panel, after conversion to an image
-  return imagePanel.getImageIcon().getImage();
-
- }
- public boolean saveImage(File imageFile, int[] pixels, int col, int row)
- {
-   try{
-     BufferedImage image = new BufferedImage(col, row, BufferedImage.TYPE_3BYTE_BGR);
-     image.setRGB(0,0,col,row,pixels,0,col);
-     ImageIO.write(image,"jpg",imageFile);
-//     OutputStream os = new FileOutputStream(imageFile);
-//     JPEGEncodeParam param = new JPEGEncodeParam();
-//     ImageEncoder enc = ImageCodec.createImageEncoder("JPEG",os,param);
+//class ImageFrame extends JInternalFrame
+//{
+//
+// // Instance Variable(s) ////////////////////////////////////////////
+// // Constant(s)
+//
+// // Data Member(s)
+// // Private
+// private File imageFile;
+// private ImagePanel imagePanel;
+//
+// // Protected
+//
+// // Public
+//
+// // Constructor(s) //////////////////////////////////////////////////
+// public ImageFrame(File imageFile)
+// {
+//
+//  // Call super class, JInternalFrame constructor
+//  super(imageFile.getName(), false, true, false);
+//
+//  // Attempt to load image
+//  imagePanel = new ImagePanel(imageFile);
+//  getContentPane().add(imagePanel);
+//
+//  // Set the internal image file to the passed arguement
+//  this.imageFile = imageFile;
+//  this.setTitle(imageFile.getName());
+//  // Initialize and show the internal frame window
+//  setSize(imagePanel.getImageIcon().getIconWidth(), imagePanel.getImageIcon().getIconHeight());
+//  show();
+//  toFront();
+// }
+//
+// public ImageFrame(Image image)
+// {
+//
+//  // Call super class, JInternalFrame constructor
+//  super("Untitled", false, true, false);
+//
+//  // Attempt to load image
+//  imagePanel = new ImagePanel(image);
+//  getContentPane().add(imagePanel);
+//
+//  // Set the internal image file to a default name
+//  imageFile = null;
+//
+//  // Initialize and show the internal frame window
+//  setSize(imagePanel.getImageIcon().getIconWidth(), imagePanel.getImageIcon().getIconHeight());
+//  show();
+//  toFront();
+// }
+//
+// // Finalize ////////////////////////////////////////////////////////
+//
+// // Method(s) ///////////////////////////////////////////////////////
+// // Private
+//
+// // Protected
+//
+// // Public
+// public Image getImage()
+// {
+//
+//  // Return the image icon from the image panel, after conversion to an image
+//  return imagePanel.getImageIcon().getImage();
+//
+// }
+// public boolean saveImage(File imageFile, int[] pixels, int col, int row)
+// {
+//   try{
+//     BufferedImage image = new BufferedImage(col, row, BufferedImage.TYPE_3BYTE_BGR);
+//     image.setRGB(0,0,col,row,pixels,0,col);
+//     ImageIO.write(image,"jpg",imageFile);
+////     OutputStream os = new FileOutputStream(imageFile);
+////     JPEGEncodeParam param = new JPEGEncodeParam();
+////     ImageEncoder enc = ImageCodec.createImageEncoder("JPEG",os,param);
+////     
+////     enc.encode(image);
+////     os.close();
 //     
-//     enc.encode(image);
-//     os.close();
-     
-     /*FileOutputStream os = new FileOutputStream(imageFile);
-      JAI.create("encode",imagePanel.getImageIcon().getImage(),os,JPG,null);
-      JAI.create("filestore",imagePanel.getImageIcon().getImage(),imageFile.getName(),JPG,null);
-      os.close();*/
-   }catch(Exception e){return false;}
-   return true;
- }
-
- private class ImagePanel extends JPanel
- {
-
-  // Instance Variable(s) ////////////////////////////////////////
-  // Constant(s)
-
-  // Data Member(s)
-  // Private
-  private ImageIcon imageIcon;
-
-  // Protected
-
-  // Public
-
-  // Constructor(s) //////////////////////////////////////////////
-  public ImagePanel(File imageFile)
-  {
-
-   // Load the image
-   imageIcon = new ImageIcon(imageFile.toString());
-
-  }
-
-  public ImagePanel(Image image)
-  {
-
-   // Load the image
-   imageIcon = new ImageIcon(image);
-
-  }
-
-  // Finalize ////////////////////////////////////////////////////
-
-  // Method(s) ///////////////////////////////////////////////////
-  // Private
-
-  // Protected
-
-  // Public
-  public ImageIcon getImageIcon()
-  {
-
-   // Return the image icon
-   return imageIcon;
-
-  }
-
-  public void paintComponent(Graphics g)
-  {
-
-   // Paint the icon to the panel
-   imageIcon.paintIcon(this, g, 0, 0);
-
-  }}}
+//     /*FileOutputStream os = new FileOutputStream(imageFile);
+//      JAI.create("encode",imagePanel.getImageIcon().getImage(),os,JPG,null);
+//      JAI.create("filestore",imagePanel.getImageIcon().getImage(),imageFile.getName(),JPG,null);
+//      os.close();*/
+//   }catch(Exception e){return false;}
+//   return true;
+// }
+//
+// private class ImagePanel extends JPanel
+// {
+//
+//  // Instance Variable(s) ////////////////////////////////////////
+//  // Constant(s)
+//
+//  // Data Member(s)
+//  // Private
+//  private ImageIcon imageIcon;
+//
+//  // Protected
+//
+//  // Public
+//
+//  // Constructor(s) //////////////////////////////////////////////
+//  public ImagePanel(File imageFile)
+//  {
+//
+//   // Load the image
+//   imageIcon = new ImageIcon(imageFile.toString());
+//
+//  }
+//
+//  public ImagePanel(Image image)
+//  {
+//
+//   // Load the image
+//   imageIcon = new ImageIcon(image);
+//
+//  }
+//
+//  // Finalize ////////////////////////////////////////////////////
+//
+//  // Method(s) ///////////////////////////////////////////////////
+//  // Private
+//
+//  // Protected
+//
+//  // Public
+//  public ImageIcon getImageIcon()
+//  {
+//
+//   // Return the image icon
+//   return imageIcon;
+//
+//  }
+//
+//  public void paintComponent(Graphics g)
+//  {
+//
+//   // Paint the icon to the panel
+//   imageIcon.paintIcon(this, g, 0, 0);
+//
+//  }}}
