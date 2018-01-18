@@ -83,7 +83,7 @@ public class FCM{
   private double[][] get_Cluster_Center(double[][][] membership){
     double[][] kCenters = new double[this.cluster][dim];
     for(int i=0;i<kCenters.length;i++){//cluster
-      for(int j=0;j<kCenters[i].length;j++){//RGB
+      for(int j=1;j<kCenters[i].length;j++){//RGB
         double num=0;
         double den=0;
         for (int row = 0; row < this.imageInDimension.getHeight(); row++){
