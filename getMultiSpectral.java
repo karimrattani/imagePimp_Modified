@@ -482,7 +482,7 @@ protected Image fCM_multiSpectral(Image imageIn, int[][][] input){
     }
 
 
-    if(super.compareArray(membership,temp_membership,term) || max==1000){
+    if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
       System.out.println("Outer Loop Ran "+max+" times");
       break;
 

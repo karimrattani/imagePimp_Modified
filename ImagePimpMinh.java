@@ -224,7 +224,17 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
       {
         // Call contrast enhancement method
         ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
-        ImageFrame newImageFrame = new ImageFrame(fCM(imageFrame.getImage()));
+        Image imageIn = imageFrame.getImage();
+        Dimension imageInDimension = getImageDimension(imageIn);
+        int input[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+        String inp = JOptionPane.showInputDialog("Enter Cluster");
+        int cluster=Integer.parseInt(inp);//Defind cluster value
+        inp = JOptionPane.showInputDialog("Enter Fuzziness");
+        double fuzziness=Double.parseDouble(inp);
+        FCM res=new FCM(imageIn,input,cluster,fuzziness);
+        Image output=res.get_FCM();
+        ImageFrame newImageFrame = new ImageFrame(output);
+        //ImageFrame newImageFrame = new ImageFrame(fCM(imageFrame.getImage()));
         desktopPane.add(newImageFrame);
         newImageFrame.toFront();
         try{newImageFrame.setSelected(true);}catch(Exception e){}
@@ -654,173 +664,7 @@ private void writeToFile(double membership[][][],String file){
 //************************************************************************
 
 
-protected Image fCM(Image imageIn){
-  Dimension imageInDimension = getImageDimension(imageIn);
-  int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
-  int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  
-  String inp = JOptionPane.showInputDialog("Enter Cluster");
-  int cluster=Integer.parseInt(inp);//Defind cluster value
-  inp = JOptionPane.showInputDialog("Enter Fuzziness");
-  Double fuzziness=Double.parseDouble(inp);
-  
-  Random rand=new Random();
-  int width=(int)imageInDimension.getWidth();//column
-  int height=(int)imageInDimension.getHeight();//row
-  int max=1;
-  double kCenters[][]=new double[cluster][3];
-  double term=0.000005;
-  double membership[][][] = new double[width][height][cluster];
-  double temp_membership[][][]= new double[width][height][cluster];
-  int[][] clusterColor=getClustersColor(cluster);
-  
-  //calculate initial membership of pixel to each cluster
-  for (int row = 0; row < imageInDimension.getHeight(); row++){
-    for (int column = 0; column < imageInDimension.getWidth(); column++)
-    {
-      double sum_Prob=0.0;
-      double remaining_Prob=100.0;
-      for(int i=0;i<cluster-1;i++){
-        double ran=rand.nextDouble()*remaining_Prob;
-        sum_Prob+=ran/100;
-        remaining_Prob-=ran;
-        membership[column][row][i]=ran/100;
-      }
-      membership[column][row][cluster-1]=1-sum_Prob;
-    }
-  }
-//  try{
-//    writeToFile(membership,"test");
-//  }catch(Exception e){
-//    System.out.println(e); 
-//  }
 
-  //calculate center for KClusters
-  //#3
-  for(int i=0;i<kCenters.length;i++){//cluster
-    for(int j=0;j<kCenters[i].length;j++){//RGB
-      double sum=0;
-      double den=0;
-      for (int row = 0; row < imageInDimension.getHeight(); row++){
-        for (int column = 0; column < imageInDimension.getWidth(); column++)
-        {
-          sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));
-          den+=Math.pow(membership[column][row][i],fuzziness);
-        }
-      }
-      //System.out.println(sum/den);
-      kCenters[i][j]=sum/den;
-      
-    }
-  }
-  
-  while(true){
-    for(int curr=0;curr<kCenters.length;curr++){//specific cluster for sum
-    for (int row = 0; row < imageInDimension.getHeight(); row++){
-      for (int column = 0; column < imageInDimension.getWidth(); column++)
-      {
-        double diff=0;
-        double coff=2/(fuzziness-1);
-        double neu=0;
-        double den=0;
-        double sum=0;
-        for(int j=0;j<kCenters.length;j++){//all cluster
-          den=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[j][0],2)+Math.pow(TRGB[2][column][row]-kCenters[j][1],2)+Math.pow(TRGB[3][column][row]-kCenters[j][2],2));
-          neu=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[curr][0],2)+Math.pow(TRGB[2][column][row]-kCenters[curr][1],2)+Math.pow(TRGB[3][column][row]-kCenters[curr][2],2));
-          double div=Math.pow((neu/den),coff);
-          sum+=div;
-          
-        }
-        temp_membership[column][row][curr]=1/sum;
-              
-//        //update in return image
-//        for(int j=0;j<kCenters[curr].length;j++){
-//          update[j+1][column][row]=(int)(TRGB[j+1][column][row]*temp_membership[column][row][curr])+(50*curr);
-//        }
-        
-        
-      }//column end      
-    }//row end
-    }//cluster end
-    
-    //update to see output
-    for (int row = 0; row < imageInDimension.getHeight(); row++){
-      for (int column = 0; column < imageInDimension.getWidth(); column++)
-      {
-        int select=0;
-        
-        double val=temp_membership[column][row][0];
-        for(int curr=0;curr<kCenters.length;curr++){
-          if(temp_membership[column][row][curr]>val){
-            val=temp_membership[column][row][curr];
-            select=curr;
-          }
-        }
-        for(int i=1;i<4;i++){//RGB
-         update[i][column][row]=clusterColor[select][i-1];
-        }
-        
-      }
-    }
-   
-    
-    if(compareArray(membership,temp_membership,term) || max==1000){
-      System.out.println("Outer Loop Ran "+max+" times");
-      break;
-      
-    }else{
-      //update membership
-      membership=temp_membership;
-      
-//      try{
-//        writeToFile(membership,"test1");
-//      }catch(Exception e){
-//       System.out.println(e); 
-//      }
-      
-      //update center
-      
-      for(int i=0;i<kCenters.length;i++){//cluster
-        for(int j=0;j<kCenters[i].length;j++){//RGB
-          double sum=0;
-          double den=0;
-          for (int row = 0; row < imageInDimension.getHeight(); row++){
-            for (int column = 0; column < imageInDimension.getWidth(); column++)
-            {
-              sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));
-              den+=Math.pow(membership[column][row][i],fuzziness);
-            }
-          }
-          kCenters[i][j]=sum/den;
-         // System.out.println(kCenters[i][j]);
-          
-        }
-      }
-      
-      max++;
-    }
-  }//outer loop end
-  
-  
-  
-  return pixelsArrayToImage(TRGBArrayToPixelsArray(update, imageInDimension), imageInDimension);
-}
-protected boolean compareArray(double[][][]arr1,double[][][]arr2,double term){
-  for(int i=0;i<arr1.length;i++){
-    for(int j=0;j<arr1[i].length;j++){
-      for(int k=0;k<arr1[i][j].length;k++){
-        if((arr1[i][j][k]-arr2[i][j][k])>term){
-          return false; 
-        }
-      }
-    }
-  }
-  return true;
-  
-  
-  
-}
-  
 //**************************************************************************
 protected double[][][] getPossibility(double[][][] memb){
   double[][][] poss=memb;
