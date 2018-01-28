@@ -52,7 +52,6 @@ public class FCM{
       }else{
         //update membership
         membership=temp_membership;
-        
         kCenters=get_Cluster_Center(membership);        
       }
     }  

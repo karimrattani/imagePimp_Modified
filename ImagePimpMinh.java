@@ -246,9 +246,17 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
                                                    {
       public void actionPerformed(ActionEvent ae)
       {
-        // Call contrast enhancement method
         ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
-        ImageFrame newImageFrame = new ImageFrame(npca_1(imageFrame.getImage()));
+        Image imageIn = imageFrame.getImage();
+        Dimension imageInDimension = getImageDimension(imageIn);
+        int input[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+        String inp = JOptionPane.showInputDialog("Enter Cluster");
+        int cluster=Integer.parseInt(inp);//Defind cluster value
+        inp = JOptionPane.showInputDialog("Enter Fuzziness");
+        double fuzziness=Double.parseDouble(inp);
+        NPCA res=new NPCA(imageIn,input,cluster,fuzziness);
+        Image output=res.get_NPCA();
+        ImageFrame newImageFrame = new ImageFrame(output);
         desktopPane.add(newImageFrame);
         newImageFrame.toFront();
         try{newImageFrame.setSelected(true);}catch(Exception e){}
@@ -260,9 +268,17 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
                                                    {
       public void actionPerformed(ActionEvent ae)
       {
-        // Call contrast enhancement method
-        ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
-        ImageFrame newImageFrame = new ImageFrame(gpca_1(imageFrame.getImage()));
+               ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
+        Image imageIn = imageFrame.getImage();
+        Dimension imageInDimension = getImageDimension(imageIn);
+        int input[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+        String inp = JOptionPane.showInputDialog("Enter Cluster");
+        int cluster=Integer.parseInt(inp);//Defind cluster value
+        inp = JOptionPane.showInputDialog("Enter Fuzziness");
+        double fuzziness=Double.parseDouble(inp);
+        GPCA res=new GPCA(imageIn,input,cluster,fuzziness);
+        Image output=res.get_GPCA();
+        ImageFrame newImageFrame = new ImageFrame(output);
         desktopPane.add(newImageFrame);
         newImageFrame.toFront();
         try{newImageFrame.setSelected(true);}catch(Exception e){}
@@ -690,214 +706,6 @@ protected double[][][] getPossibility(double[][][] memb){
   
 }
 
-//**************************************************************************
-
-//**************************************************************************  
-protected Image npca_1(Image imageIn){
-  Dimension imageInDimension = getImageDimension(imageIn);
-  int TRGB[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
-  int update[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);//to store updated pixel values
-  
-  String inp = JOptionPane.showInputDialog("Enter Cluster");
-  int cluster=Integer.parseInt(inp);//Defind cluster value
-  inp = JOptionPane.showInputDialog("Enter Fuzziness");
-  Double fuzziness=Double.parseDouble(inp);
-  
-  Random rand=new Random();
-  int width=(int)imageInDimension.getWidth();//column
-  int height=(int)imageInDimension.getHeight();//row
-  
-  int max=1;
-  double kCenters[][]=new double[cluster][3];
-  double term=0.00001;
-  double membership[][][] = new double[width][height][cluster];
-  double temp_membership[][][] = new double[width][height][cluster];
-  double poss[][][]=new double[width][height][cluster];
-  double temp_kCenters[][]=new double[cluster][3];
-  int count[]=new int[cluster];
-  int[][] clusterColor=getClustersColor(cluster);
-  Random r = new Random();
-  
-  //calculate initial membership of pixel to each cluster
-  for (int row = 0; row < imageInDimension.getHeight(); row++){
-    for (int column = 0; column < imageInDimension.getWidth(); column++)
-    {
-      double sum_Prob=0.0;
-      double remaining_Prob=100.0;
-      for(int i=0;i<cluster-1;i++){
-        double ran=rand.nextDouble()*remaining_Prob;
-        sum_Prob+=ran/100;
-        remaining_Prob-=ran;
-        membership[column][row][i]=ran/100;
-      }
-      membership[column][row][cluster-1]=1-sum_Prob;
-    }
-  }
-  
-  //calculate possibility
-  poss=getPossibility(membership);
-
-  //calculate center for KClusters
-  //#3
-  for(int i=0;i<kCenters.length;i++){//cluster
-    for(int j=0;j<kCenters[i].length;j++){//RGB
-      double sum=0;
-      double den=0;
-      for (int row = 0; row < imageInDimension.getHeight(); row++){
-        for (int column = 0; column < imageInDimension.getWidth(); column++)
-        {
-          sum+=TRGB[j+1][column][row]*(Math.pow(poss[column][row][i],fuzziness));//equation #25
-          den+=Math.pow(poss[column][row][i],fuzziness);
-        }
-      }
-     // System.out.println(sum/den);
-      kCenters[i][j]=sum/den;
-      
-    }
-  }
-  
-  while(true){
-    for(int curr=0;curr<kCenters.length;curr++){//specific cluster for sum
-    for (int row = 0; row < imageInDimension.getHeight(); row++){
-      for (int column = 0; column < imageInDimension.getWidth(); column++)
-      {
-        double diff=0;
-        double dist=0;
-        double neu=0;
-        double den=0;
-        double sum=0;
-        double param_f=0;
-        double all_clus_dist=0;
-        //Equation 14
-        
-        //average fuzzy intracluster distance of cluster 
-        
-        for(int j=0;j<kCenters.length;j++){//all cluster
-          all_clus_dist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[j][0],2)+Math.pow(TRGB[2][column][row]-kCenters[j][1],2)+Math.pow(TRGB[3][column][row]-kCenters[j][2],2));
-          neu+=Math.pow(membership[column][row][j],fuzziness)*Math.pow(all_clus_dist,2);
-          den+=Math.pow(membership[column][row][j],fuzziness);
-          //sum+=(neu/den);
-        }
-        
-        sum=Math.sqrt(neu/den);
-        dist=Math.sqrt(Math.pow(TRGB[1][column][row]-kCenters[curr][0],2)+Math.pow(TRGB[2][column][row]-kCenters[curr][1],2)+Math.pow(TRGB[3][column][row]-kCenters[curr][2],2));//current cluster distance
-          
-          //calculate membership
-          double f=0;
-          if(dist==0){
-            f=1;
-          }else if(dist==1){
-            f=0;
-          }else{
-            f = Math.pow(1+(Math.pow(fuzziness*cluster,3)*Math.pow(dist/sum,2)),-1);
-          }
-          
-          temp_membership[column][row][curr]=f;
-              
-        
-        
-      }//column end      
-    }//row end
-    }//cluster end
-
-    //check if old and new membership are same
-    if(checkMembership(membership,temp_membership,term) || max==1000){
-      double res=XB_Index(membership,kCenters,TRGB,imageInDimension);
-      System.out.println("Outer Loop Ran "+max+" times");
-      break;
-    }else{
-      membership=temp_membership;
-        //update possibility
-      poss=getPossibility(membership);
-      //update centers
-      for(int i=0;i<kCenters.length;i++){//cluster
-        for(int j=0;j<kCenters[i].length;j++){//RGB
-          double sum=0;
-          double den=0;
-          for (int row = 0; row < imageInDimension.getHeight(); row++){
-            for (int column = 0; column < imageInDimension.getWidth(); column++)
-            {
-              sum+=TRGB[j+1][column][row]*(Math.pow(poss[column][row][i],fuzziness));//equation #25
-              den+=Math.pow(poss[column][row][i],fuzziness);
-            }
-          }
-          
-          kCenters[i][j]=sum/den;
-          
-        }
-      }
-    }//else end
-    
-
-    //update to see output
-    for (int row = 0; row < imageInDimension.getHeight(); row++){
-      for (int column = 0; column < imageInDimension.getWidth(); column++)
-      {
-        int select=0;
-        
-        double val=membership[column][row][0];
-        for(int curr=0;curr<kCenters.length;curr++){
-          if(membership[column][row][curr]>val){
-            val=membership[column][row][curr];
-            select=curr;
-          }
-        }
-        count[select]++;
-        
-        for(int i=1;i<4;i++){//RGB
-            update[i][column][row]=clusterColor[select][i-1];
-        }
-        
-        
-      }
-    }
-    
-    max++;
-
-//    if(checkArray(kCenters,temp_kCenters,term) || max==1000){
-//       //output count
-////      for(int i=0;i<count.length;i++){
-////        System.out.println(i+": "+count[i]);
-////      }
-//      System.out.println("Outer Loop Ran "+max+" times");
-//      break;
-//      
-//    }else{
-//      //update membership
-//      kCenters=temp_kCenters;
-////      try{
-////        writeToFile(membership,"final_membership");
-////      }catch(Exception e){
-////        System.out.println(e); 
-////      }
-//      
-//      //update center
-//      
-//      for(int i=0;i<kCenters.length;i++){//cluster
-//        for(int j=0;j<kCenters[i].length;j++){//RGB
-//          double sum=0;
-//          double den=0;
-//          for (int row = 0; row < imageInDimension.getHeight(); row++){
-//            for (int column = 0; column < imageInDimension.getWidth(); column++)
-//            {
-//              sum+=TRGB[j+1][column][row]*(Math.pow(membership[column][row][i],fuzziness));
-//              den+=Math.pow(membership[column][row][i],fuzziness);
-//            }
-//          }
-//          kCenters[i][j]=sum/den;
-//         // System.out.println(kCenters[i][j]);
-//          
-//        }
-//      }
-      
-     
-    //}
-  }//outer loop end
-  
-  
-  
-  return pixelsArrayToImage(TRGBArrayToPixelsArray(update, imageInDimension), imageInDimension);
-}
 
 //******************************************************************************************************
 //******************************************************************************************************
@@ -1226,7 +1034,7 @@ protected Image multiSpectral(int alg){
 
   // Convert image to an Image Icon to get the dimensions
   ImageIcon imageIconIn = new ImageIcon(imageIn);
-  return new Dimension(imageIconIn.getIconWidth(), imageIconIn.getIconHeight());
+  return new Dimension(imageIconIn.getIconWidth(), imageIconIn.getIconHeight()+100);
 
  }
 
@@ -1365,148 +1173,3 @@ protected Image multiSpectral(int alg){
  // Public
 
 }
-
-//class ImageFrame extends JInternalFrame
-//{
-//
-// // Instance Variable(s) ////////////////////////////////////////////
-// // Constant(s)
-//
-// // Data Member(s)
-// // Private
-// private File imageFile;
-// private ImagePanel imagePanel;
-//
-// // Protected
-//
-// // Public
-//
-// // Constructor(s) //////////////////////////////////////////////////
-// public ImageFrame(File imageFile)
-// {
-//
-//  // Call super class, JInternalFrame constructor
-//  super(imageFile.getName(), false, true, false);
-//
-//  // Attempt to load image
-//  imagePanel = new ImagePanel(imageFile);
-//  getContentPane().add(imagePanel);
-//
-//  // Set the internal image file to the passed arguement
-//  this.imageFile = imageFile;
-//  this.setTitle(imageFile.getName());
-//  // Initialize and show the internal frame window
-//  setSize(imagePanel.getImageIcon().getIconWidth(), imagePanel.getImageIcon().getIconHeight());
-//  show();
-//  toFront();
-// }
-//
-// public ImageFrame(Image image)
-// {
-//
-//  // Call super class, JInternalFrame constructor
-//  super("Untitled", false, true, false);
-//
-//  // Attempt to load image
-//  imagePanel = new ImagePanel(image);
-//  getContentPane().add(imagePanel);
-//
-//  // Set the internal image file to a default name
-//  imageFile = null;
-//
-//  // Initialize and show the internal frame window
-//  setSize(imagePanel.getImageIcon().getIconWidth(), imagePanel.getImageIcon().getIconHeight());
-//  show();
-//  toFront();
-// }
-//
-// // Finalize ////////////////////////////////////////////////////////
-//
-// // Method(s) ///////////////////////////////////////////////////////
-// // Private
-//
-// // Protected
-//
-// // Public
-// public Image getImage()
-// {
-//
-//  // Return the image icon from the image panel, after conversion to an image
-//  return imagePanel.getImageIcon().getImage();
-//
-// }
-// public boolean saveImage(File imageFile, int[] pixels, int col, int row)
-// {
-//   try{
-//     BufferedImage image = new BufferedImage(col, row, BufferedImage.TYPE_3BYTE_BGR);
-//     image.setRGB(0,0,col,row,pixels,0,col);
-//     ImageIO.write(image,"jpg",imageFile);
-////     OutputStream os = new FileOutputStream(imageFile);
-////     JPEGEncodeParam param = new JPEGEncodeParam();
-////     ImageEncoder enc = ImageCodec.createImageEncoder("JPEG",os,param);
-////     
-////     enc.encode(image);
-////     os.close();
-//     
-//     /*FileOutputStream os = new FileOutputStream(imageFile);
-//      JAI.create("encode",imagePanel.getImageIcon().getImage(),os,JPG,null);
-//      JAI.create("filestore",imagePanel.getImageIcon().getImage(),imageFile.getName(),JPG,null);
-//      os.close();*/
-//   }catch(Exception e){return false;}
-//   return true;
-// }
-//
-// private class ImagePanel extends JPanel
-// {
-//
-//  // Instance Variable(s) ////////////////////////////////////////
-//  // Constant(s)
-//
-//  // Data Member(s)
-//  // Private
-//  private ImageIcon imageIcon;
-//
-//  // Protected
-//
-//  // Public
-//
-//  // Constructor(s) //////////////////////////////////////////////
-//  public ImagePanel(File imageFile)
-//  {
-//
-//   // Load the image
-//   imageIcon = new ImageIcon(imageFile.toString());
-//
-//  }
-//
-//  public ImagePanel(Image image)
-//  {
-//
-//   // Load the image
-//   imageIcon = new ImageIcon(image);
-//
-//  }
-//
-//  // Finalize ////////////////////////////////////////////////////
-//
-//  // Method(s) ///////////////////////////////////////////////////
-//  // Private
-//
-//  // Protected
-//
-//  // Public
-//  public ImageIcon getImageIcon()
-//  {
-//
-//   // Return the image icon
-//   return imageIcon;
-//
-//  }
-//
-//  public void paintComponent(Graphics g)
-//  {
-//
-//   // Paint the icon to the panel
-//   imageIcon.paintIcon(this, g, 0, 0);
-//
-//  }}}
