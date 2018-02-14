@@ -46,12 +46,13 @@ public class GPCA{
        if(max%10==0){System.out.println("Inside Loop for "+max);}
        temp_membership=get_membership(kCenters,membership);
        
-       if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
+       if(ImageTools.compareArray(membership,temp_membership,term) || max==7){
          
          System.out.println("Outer Loop Ran "+max+" times");
          break;
          
        }else{
+         System.out.println("Currently in loop "+max);
          membership=temp_membership;
          kCenters=get_Cluster_Center(membership);
        }
@@ -127,6 +128,37 @@ public class GPCA{
     
   }
   
+    private double get_intra_cluster_distance_fix(double[][] kCenters, int clus,double[][][] membership){
+    double dist=0;
+    double neu=0;
+    double den=0;
+    double sum=0;
+    double all_clus_dist,clus_dist;
+    
+     for (int row = 0; row < imageInDimension.getHeight(); row++){
+       for (int column = 0; column < imageInDimension.getWidth(); column++){
+         clus_dist=0;
+         for(int d=1;d<dim;d++){
+           clus_dist+=Math.pow(input[d][column][row]-kCenters[clus][d],2);
+         }
+         clus_dist=Math.sqrt(clus_dist);
+         neu+=Math.pow(membership[column][row][clus],fuzziness)*Math.pow(clus_dist,2);
+         den+=membership[column][row][clus];
+       }
+     }
+//    for(int j=0;j<kCenters.length;j++){//all cluster
+//      all_clus_dist=0;
+//      
+//      all_clus_dist=Math.sqrt(all_clus_dist);
+//      neu+=Math.pow(membership[column][row][j],fuzziness)*Math.pow(all_clus_dist,2);
+//      den+=Math.pow(membership[column][row][j],fuzziness);
+//    }
+    sum=Math.sqrt(neu/den); 
+    
+    return sum;
+    
+  }
+    
   private double calculate_membership(double[][] kCenters, int column, int row, double intra_clust, int curr){
     double dist=0;
     for(int d=1;d<dim;d++){
@@ -154,7 +186,7 @@ public class GPCA{
         for (int column = 0; column < imageInDimension.getWidth(); column++)
         {
           //get intracluster distance - #14
-          double intra_clus_distance = get_intra_cluster_distance(kCenters,column,row,membership);
+          double intra_clus_distance = get_intra_cluster_distance_fix(kCenters,curr,membership);
           temp_membership[column][row][curr]= calculate_membership(kCenters,column,row,intra_clus_distance,curr);       
           
           

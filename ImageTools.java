@@ -4,9 +4,42 @@ import javax.swing.ImageIcon;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.PixelGrabber;
 import java.util.Random;
+import java.io.*;
 public class ImageTools{
   //**************************************************************************
 //**************************************************************************
+  protected static void writeToFile(double membership[][][],String file){
+      
+  try{ BufferedWriter writer = new BufferedWriter(new FileWriter(file+".csv"));
+    for (int row = 0; row < membership.length; row++){
+      for (int column = 0; column < membership[row].length; column++)
+      {
+        writer.write(row+","+column+",");
+        for(int i=0;i<membership[row][column].length;i++){
+         // System.out.println(membership[column].length);
+          writer.write(membership[row][column][i]+",");
+        }
+        writer.write("\n");
+      }
+      
+    }
+    writer.close();
+  }catch(Exception e){
+    System.out.println(e); 
+  }
+}
+  
+  protected static double getEuclideanDist(double[] a,int[] b){
+    double sum=0;
+    for(int i=0;i<a.length;i++){
+      sum+=Math.pow(a[i]-b[i],2);
+      
+    }
+    
+   sum=Math.sqrt(sum);
+   return sum;
+
+  }
   protected static int[][] getClustersColor(int cluster){//get Cluster Color to differentiate
     Random rnd=new Random();
     int[][] arr=new int[cluster][3];

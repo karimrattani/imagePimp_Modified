@@ -165,6 +165,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
     JMenuItem grayscaleTransformationsMenuItem = new JMenuItem("Grayscale");
     JMenuItem kMeansTransformationsMenuItem = new JMenuItem("K-Means");
     JMenuItem fcmTransformationsMenuItem = new JMenuItem("FCM");
+    JMenuItem pcaTransformationsMenuItem = new JMenuItem("PCM 93");
     JMenuItem gpcaTransformationsMenuItem = new JMenuItem("GPCA #1");
     JMenuItem npcaTransformationsMenuItem = new JMenuItem("NPCA #1");
     JMenuItem fcmMultiSpectralTransformationsMenuItem = new JMenuItem("FCM MultiSpectral #1");
@@ -233,6 +234,30 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
         double fuzziness=Double.parseDouble(inp);
         FCM res=new FCM(imageIn,input,cluster,fuzziness);
         Image output=res.get_FCM();
+        ImageFrame newImageFrame = new ImageFrame(output);
+        //ImageFrame newImageFrame = new ImageFrame(fCM(imageFrame.getImage()));
+        desktopPane.add(newImageFrame);
+        newImageFrame.toFront();
+        try{newImageFrame.setSelected(true);}catch(Exception e){}
+      }
+    }
+    );
+    pcaTransformationsMenuItem.addActionListener(
+                                                 new ActionListener()
+                                                   {
+      public void actionPerformed(ActionEvent ae)
+      {
+        // Call contrast enhancement method
+        ImageFrame imageFrame = (ImageFrame) desktopPane.getSelectedFrame();
+        Image imageIn = imageFrame.getImage();
+        Dimension imageInDimension = getImageDimension(imageIn);
+        int input[][][] = pixelsArrayToTRGBArray(imageToPixelsArray(imageIn), imageInDimension);
+        String inp = JOptionPane.showInputDialog("Enter Cluster");
+        int cluster=Integer.parseInt(inp);//Defind cluster value
+        inp = JOptionPane.showInputDialog("Enter Fuzziness");
+        double fuzziness=Double.parseDouble(inp);
+        PCA res=new PCA(imageIn,input,cluster,fuzziness);
+        Image output=res.get_PCA();
         ImageFrame newImageFrame = new ImageFrame(output);
         //ImageFrame newImageFrame = new ImageFrame(fCM(imageFrame.getImage()));
         desktopPane.add(newImageFrame);
@@ -342,6 +367,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
     transformationsMenu.add(grayscaleTransformationsMenuItem);
     transformationsMenu.add(kMeansTransformationsMenuItem);
     transformationsMenu.add(fcmTransformationsMenuItem);
+    transformationsMenu.add(pcaTransformationsMenuItem);
     transformationsMenu.add(npcaTransformationsMenuItem);
     transformationsMenu.add(gpcaTransformationsMenuItem);
     transformationsMenu.add(npcaMultiSpectralTransformationsMenuItem);
@@ -1034,7 +1060,7 @@ protected Image multiSpectral(int alg){
 
   // Convert image to an Image Icon to get the dimensions
   ImageIcon imageIconIn = new ImageIcon(imageIn);
-  return new Dimension(imageIconIn.getIconWidth(), imageIconIn.getIconHeight()+100);
+  return new Dimension(imageIconIn.getIconWidth(), imageIconIn.getIconHeight());
 
  }
 
