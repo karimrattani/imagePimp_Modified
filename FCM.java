@@ -47,6 +47,8 @@ public class FCM{
       
       if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
         System.out.println("Outer Loop Ran "+max+" times");
+        //System.out.println("BezdekPartitionCoefficient "+ImageTools.bezdekPartitionCoefficient(membership));
+        System.out.println("Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,membership,kCenters,this.fuzziness));
         break;
         
       }else{
@@ -93,7 +95,10 @@ public class FCM{
             den+=Math.pow(membership[column][row][i],this.fuzziness);
           }
         }
-        
+         if(Double.isNaN(num/den)){
+         System.out.println("Invalid center value for cluster"+i+" and dimension"+j); 
+         throw new IllegalArgumentException();
+        }
         //System.out.println(sum/den);
         kCenters[i][j]=num/den;
         
@@ -159,7 +164,42 @@ public class FCM{
     return update;
   }
   
-  
+    public double[][][] get_FCM_membership(){
+    int update[][][] = new int[dim][this.width][this.height];
+    double term=0.00001;
+    double membership[][][] = new double[width][height][cluster];
+    double temp_membership[][][]= new double[width][height][cluster];
+    int[][] clusterColor=ImageTools.getClustersColor(this.cluster);
+    double kCenters[][]=new double[this.cluster][dim];
+    int max=0;
+    
+    
+    //Initialize Membership
+    membership=initialize_membership();
+    
+    
+    //Cluster Center
+    kCenters=get_Cluster_Center(membership);
+    
+    while(true){
+      max++;
+      temp_membership=get_membership(kCenters);
+      update=get_output(kCenters,temp_membership);
+      
+      if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
+        System.out.println("Outer Loop Ran "+max+" times");
+        System.out.println("BezdekPartitionCoefficient "+ImageTools.bezdekPartitionCoefficient(membership));
+        System.out.println("Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
+        break;
+        
+      }else{
+        //update membership
+        membership=temp_membership;
+        kCenters=get_Cluster_Center(membership);        
+      }
+    }  
+    return membership;
+  }
   
   
   

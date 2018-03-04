@@ -7,6 +7,97 @@ import java.util.Random;
 import java.io.*;
 public class ImageTools{
   //**************************************************************************
+      /**
+     * Computes the <b>partition coefficient</b> as proposed by Bezdek in
+     * <i>"Bezdek JC. Cluster validity with fuzzy sets. J Cybern 1974;3:58–73"</i>
+     * It considers the average sum of the squared fuzzy membership values
+     * Better clustering partitions induce higher values of the coefficient
+     * @param U The float matrix containing the fuzzy memberships, result of the fuzzy
+     * clustering algorithm
+     * @return the computed partition coefficient as a double
+     */
+    public static double bezdekPartitionCoefficient(double [][][] U){
+      System.out.println("My length is "+U.length+" and my second length is "+U[0].length);
+        double sum = 0;
+        for(int row=0;row<U[0].length;row++){
+        for(int column = 0; column < U.length; column++)
+        {
+            for(int c = 0; c < U[column][row].length; c++)
+            {
+                sum += Math.pow(U[column][row][c], 2);
+            }
+
+        }
+        }
+        sum = sum / (U.length*U[0].length);
+
+        return sum;
+    }
+    
+    
+    public static double compactnessAndSeparationMetric(int[][][] input, double[][][] membership,
+                                                       double[][] kCenters, double fuzziness){
+      
+       double numerator = 0, denominator = 0, min = Double.MAX_VALUE;
+       
+
+       
+         for(int row=0;row<membership[0].length;row++){
+           for(int column = 0; column < membership.length; column++)
+           {
+             for(int c = 0; c < kCenters.length; c++){
+             double dist = 0;
+             for(int d=1;d<kCenters[0].length;d++){
+               dist+=(Math.pow(input[d][column][row]-kCenters[c][d],2));
+             }
+             numerator += Math.pow(membership[column][row][c], fuzziness) * dist;
+           }
+           
+         }
+       }
+         System.out.println("My Numerator is "+numerator);
+       for(int clus = 0; clus < kCenters.length; clus++){
+         for(int clus2 = 0; clus2 < kCenters.length; clus2++){
+           if(clus!=clus2){
+             double dist = 0;
+             for(int d=1;d<kCenters[0].length;d++){
+               dist+=(Math.pow(kCenters[clus][d]-kCenters[clus2][d],2));
+             }
+             dist=Math.sqrt(dist);
+             if(dist<min){
+               min=dist; 
+             }
+           }
+         }
+       }
+       denominator = min*membership.length*membership[0].length;
+     return numerator/denominator; 
+    }
+  
+    public static double[][][] getNormalize(double[][][] memb){
+  double[][][] poss=memb;
+  int clus_index=-1;
+  for(int i=0;i<memb.length;i++){
+    for(int j=0;j<memb[i].length;j++){
+      double max=0;
+      for(int k=0;k<memb[i][j].length;k++){//get max value in cluster set or sup
+        if(memb[i][j][k]>max){
+          max=memb[i][j][k];
+          clus_index=k;
+        }
+      }
+      for(int k=0;k<memb[i][j].length;k++){//update max value in cluster set
+        poss[i][j][k]=memb[i][j][k]/memb[i][j][clus_index];
+      }
+    }
+  }
+
+  return poss;
+  
+  
+  
+}
+  
 //**************************************************************************
   protected static void writeToFile(double membership[][][],String file){
       

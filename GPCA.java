@@ -107,56 +107,83 @@ public class GPCA{
     
   }
   
-  private double get_intra_cluster_distance(double[][] kCenters, int column, int row,double[][][] membership){
-    double dist=0;
-    double neu=0;
-    double den=0;
-    double sum=0;
-    double all_clus_dist;
-    for(int j=0;j<kCenters.length;j++){//all cluster
-      all_clus_dist=0;
-      for(int d=1;d<dim;d++){
-        all_clus_dist+=Math.pow(input[d][column][row]-kCenters[j][d],2);
-      }
-      all_clus_dist=Math.sqrt(all_clus_dist);
-      neu+=Math.pow(membership[column][row][j],fuzziness)*Math.pow(all_clus_dist,2);
-      den+=Math.pow(membership[column][row][j],fuzziness);
-    }
-    sum=Math.sqrt(neu/den); 
-    
-    return sum;
-    
-  }
-  
-    private double get_intra_cluster_distance_fix(double[][] kCenters, int clus,double[][][] membership){
-    double dist=0;
-    double neu=0;
-    double den=0;
-    double sum=0;
-    double all_clus_dist,clus_dist;
-    
-     for (int row = 0; row < imageInDimension.getHeight(); row++){
-       for (int column = 0; column < imageInDimension.getWidth(); column++){
-         clus_dist=0;
-         for(int d=1;d<dim;d++){
-           clus_dist+=Math.pow(input[d][column][row]-kCenters[clus][d],2);
-         }
-         clus_dist=Math.sqrt(clus_dist);
-         neu+=Math.pow(membership[column][row][clus],fuzziness)*Math.pow(clus_dist,2);
-         den+=membership[column][row][clus];
-       }
-     }
+//  private double get_intra_cluster_distance(double[][] kCenters, int column, int row,double[][][] membership){
+//    double dist=0;
+//    double neu=0;
+//    double den=0;
+//    double sum=0;
+//    double all_clus_dist;
 //    for(int j=0;j<kCenters.length;j++){//all cluster
 //      all_clus_dist=0;
-//      
+//      for(int d=1;d<dim;d++){
+//        all_clus_dist+=Math.pow(input[d][column][row]-kCenters[j][d],2);
+//      }
 //      all_clus_dist=Math.sqrt(all_clus_dist);
 //      neu+=Math.pow(membership[column][row][j],fuzziness)*Math.pow(all_clus_dist,2);
 //      den+=Math.pow(membership[column][row][j],fuzziness);
 //    }
-    sum=Math.sqrt(neu/den); 
+//    sum=Math.sqrt(neu/den); 
+//    
+//    return sum;
+//    
+//  }
+  
+    private double get_intra_cluster_distance_fix(double[][] kCenters, int clus,double[][][] membership,int r, int c){
+    double dist=0;
+    double neu=0;
+    double den=0;
+    double sum=0;
+    double all_clus_dist = 0,clus_dist = 0;
     
-    return sum;
+//     for (int row = 0; row < imageInDimension.getHeight(); row++){
+//       for (int column = 0; column < imageInDimension.getWidth(); column++){
+//         clus_dist=0;
+//         for(int d=1;d<dim;d++){
+//           clus_dist+=Math.pow(input[d][column][row]-kCenters[clus][d],2);
+//         }
+//         neu+=Math.pow(membership[column][row][clus],fuzziness)*clus_dist;
+//         den+=Math.pow(membership[column][row][clus],fuzziness);
+//       }
+//     }
+//    sum=Math.sqrt(neu/den);
     
+    //second approach
+//    double alpha = 0.5;
+//    int count=0;
+//    
+//    for (int row = 0; row < imageInDimension.getHeight(); row++){
+//      for (int column = 0; column < imageInDimension.getWidth(); column++){
+//        if(membership[column][row][clus]>=alpha){
+//         clus_dist=0;
+//         for(int d=1;d<dim;d++){
+//           clus_dist+=Math.pow(input[d][column][row]-kCenters[clus][d],2);
+//         }
+//         sum+=clus_dist;
+//         count++;
+//        }
+//      }
+//    }
+//    
+//    return Math.sqrt(sum/count);
+    
+    //fun approach
+    double alpha = 0.5;
+    int count=0;
+    for(int d=1;d<dim;d++){
+      clus_dist+=Math.pow(input[d][c][r]-kCenters[clus][d],2);
+    }
+    
+    for (int row = 0; row < imageInDimension.getHeight(); row++){
+      for (int column = 0; column < imageInDimension.getWidth(); column++){
+    
+        if(membership[column][row][clus]>=alpha){
+          sum+=clus_dist;
+          count++;
+        }
+      }
+    }
+    
+    return Math.sqrt(sum/count);
   }
     
   private double calculate_membership(double[][] kCenters, int column, int row, double intra_clust, int curr){
@@ -186,7 +213,7 @@ public class GPCA{
         for (int column = 0; column < imageInDimension.getWidth(); column++)
         {
           //get intracluster distance - #14
-          double intra_clus_distance = get_intra_cluster_distance_fix(kCenters,curr,membership);
+          double intra_clus_distance = get_intra_cluster_distance_fix(kCenters,curr,membership,row,column);
           temp_membership[column][row][curr]= calculate_membership(kCenters,column,row,intra_clus_distance,curr);       
           
           
