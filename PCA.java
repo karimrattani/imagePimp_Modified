@@ -45,9 +45,10 @@ public class PCA{
       
       if(ImageTools.compareArray(membership,temp_membership,term) || max==100){
         update=get_output(kCenters,temp_membership);
-        //System.out.println("BezdekPartitionCoefficient "+ImageTools.bezdekPartitionCoefficient(membership));
-        System.out.println("Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
+        System.out.println("PCA - Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
+        System.out.println("PCA - iIndex: "+ImageTools.iIndex(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
         System.out.println("Outer Loop Ran "+max+" times");
+        System.out.println("--- \t --- \t ---");
         break;
         
       }else{
@@ -129,14 +130,11 @@ public class PCA{
         }
         update[0][column][row]=100; //alpha
         for(int i=1;i<4;i++){//RGB
-          update[i][column][row]=this.clusterColor[select][i-1];
+          update[i][column][row]=(int)kCenters[select][i];
           count[select]++;
         }
         
       }
-    }
-    for(int i=0;i<count.length;i++){
-     System.out.println("Cluster:"+i+" Elements:"+count[i]); 
     }
     return update;
   }

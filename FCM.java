@@ -46,9 +46,10 @@ public class FCM{
       update=get_output(kCenters,temp_membership);
       
       if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
+        System.out.println("FCM - Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
+        System.out.println("FCM - iIndex: "+ImageTools.iIndex(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
         System.out.println("Outer Loop Ran "+max+" times");
-        //System.out.println("BezdekPartitionCoefficient "+ImageTools.bezdekPartitionCoefficient(membership));
-        System.out.println("Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,membership,kCenters,this.fuzziness));
+        System.out.println("--- \t --- \t ---");
         break;
         
       }else{
@@ -156,7 +157,7 @@ public class FCM{
           }
         }
         for(int i=1;i<4;i++){//RGB
-          update[i][column][row]=this.clusterColor[select][i-1];
+          update[i][column][row]=(int)kCenters[select][i];
         }
         
       }
@@ -188,7 +189,7 @@ public class FCM{
       
       if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
         System.out.println("Outer Loop Ran "+max+" times");
-        System.out.println("BezdekPartitionCoefficient "+ImageTools.bezdekPartitionCoefficient(membership));
+        System.out.println("iIndex: "+ImageTools.iIndex(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
         System.out.println("Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
         break;
         

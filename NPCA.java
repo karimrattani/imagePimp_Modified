@@ -47,8 +47,10 @@ public class NPCA{
        temp_membership=get_membership(kCenters,membership);
        
        if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
-         
+         System.out.println("NPCA - Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
+         System.out.println("NPCA - iIndex: "+ImageTools.iIndex(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
          System.out.println("Outer Loop Ran "+max+" times");
+         System.out.println("--- \t --- \t ---");
          break;
          
        }else{
@@ -205,7 +207,7 @@ public class NPCA{
           }
         }
         for(int i=1;i<4;i++){//RGB
-          update[i][column][row]=clusterColor[select][i-1];
+          update[i][column][row]=(int)kCenters[select][i];
         }
         
         

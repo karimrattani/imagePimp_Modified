@@ -12,11 +12,11 @@ import java.net.*;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.JOptionPane;
-import javax.media.jai.*;
+//import javax.media.jai.*;
 import javax.swing.*;
 //import javax.media.jai.PlanarImage;
 import java.text.DecimalFormat;
-import com.sun.media.jai.codec.*;
+//import com.sun.media.jai.codec.*;
 import javax.swing.ImageIcon;
 import java.util.Random;
 import java.lang.*;
@@ -96,7 +96,7 @@ public class ImagePimpMinh extends JFrame //implements ActionListener
        // Open a file dialog box to choose a file
        JFileChooser fileChooser = new JFileChooser();
        
-       fileChooser.setCurrentDirectory(new File("."));
+       fileChooser.setCurrentDirectory(new File("images/results/input"));
        // Initialize dialog box
        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
