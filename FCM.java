@@ -44,7 +44,7 @@ public class FCM{
       max++;
       temp_membership=get_membership(kCenters);
       update=get_output(kCenters,temp_membership);
-      
+      //System.out.println("I'm at iteration "+max);
       if(ImageTools.compareArray(membership,temp_membership,term) || max==1000){
         System.out.println("FCM - Xei And Beni: "+ImageTools.compactnessAndSeparationMetric(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
         System.out.println("FCM - iIndex: "+ImageTools.iIndex(input,ImageTools.getNormalize(membership),kCenters,this.fuzziness));
@@ -86,8 +86,8 @@ public class FCM{
     double[][] kCenters = new double[this.cluster][dim];
     for(int i=0;i<kCenters.length;i++){//cluster
       for(int j=1;j<kCenters[i].length;j++){//RGB
-        double num=0;
-        double den=0;
+        double num=0.0;
+        double den=0.0;
         for (int row = 0; row < this.imageInDimension.getHeight(); row++){
           for (int column = 0; column < this.imageInDimension.getWidth(); column++)
           {
@@ -96,12 +96,15 @@ public class FCM{
             den+=Math.pow(membership[column][row][i],this.fuzziness);
           }
         }
-         if(Double.isNaN(num/den)){
-         System.out.println("Invalid center value for cluster"+i+" and dimension"+j); 
-         throw new IllegalArgumentException();
-        }
+        Double ans = num/den;
+         if(Double.isNaN(ans)){
+           System.err.println("Invalid center value for cluster"+i+" and dimension"+j); 
+           ans=0.0;
+           throw new IllegalArgumentException();
+           
+         }
         //System.out.println(sum/den);
-        kCenters[i][j]=num/den;
+        kCenters[i][j]=ans;
         
       }
     }
